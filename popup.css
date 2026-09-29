@@ -1,0 +1,185 @@
+/* Beesly Tebligat Sorgulama — Dunder Mifflin teması
+   Palet: ofis grisi #f8f9fa, kurumsal mavi #1a365d / #0056b3
+   GIF'ler: assets/pam-success.gif, assets/michael-panic.gif, assets/michael-no.gif
+   (bulunamazsa otomatik emoji yedeği görünür) */
+
+* { box-sizing: border-box; }
+
+body {
+    width: 360px;
+    max-width: 400px;
+    font-family: "Inter", Arial, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 12px;
+    background: #f8f9fa;
+    color: #2d3748;
+}
+
+/* Başlık */
+.dm-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 3px solid #1a365d;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+.dm-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1a365d, #0056b3);
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.dm-titles h3 {
+    margin: 0;
+    font-size: 15px;
+    color: #1a365d;
+}
+.dm-sub {
+    font-size: 11px;
+    color: #718096;
+    font-style: italic;
+}
+
+/* Kartlar */
+.barcode-item {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #0056b3;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(26, 54, 93, 0.08);
+}
+.row { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.info { font-size: 13px; }
+.badge {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 2px;
+}
+.badge-uets { background: #ebf4ff; color: #1a365d; }
+.badge-ptt { background: #f0fff4; color: #276749; }
+
+/* Butonlar */
+.btn {
+    background: #0056b3;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 4px;
+}
+.btn:hover { background: #1a365d; }
+.btn:disabled { background: #a0aec0; cursor: wait; }
+.btn-secondary { background: #718096; }
+.btn-secondary:hover { background: #4a5568; }
+
+/* Form */
+.form-title { font-size: 12px; font-weight: bold; color: #1a365d; margin-bottom: 6px; }
+#uetsForm input[type="text"], #uetsForm input[type="password"] {
+    width: 100%;
+    margin-bottom: 6px;
+    padding: 6px;
+    font-size: 13px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+}
+#uetsForm input:focus { outline: 2px solid #0056b3; border-color: #0056b3; }
+.captcha-row { margin-bottom: 6px; }
+#uetsCaptchaImg {
+    height: 38px;
+    min-width: 110px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+}
+
+/* UETS barı */
+.uets-bar {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.dot { font-weight: bold; }
+.dot.on { color: #2f855a; }
+.dot.off { color: #c53030; }
+
+/* Sonuç alanı */
+.msg { text-align: center; font-size: 13px; color: #718096; margin-top: 20px; }
+.result {
+    font-size: 12px;
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+}
+.result.ok { border-color: #9ae6b4; background: #f0fff4; }
+.result.err { border-color: #feb2b2; background: #fff5f5; }
+.result .ux-title { font-weight: 800; color: #1a365d; margin: 4px 0 2px; }
+.result .ux-sub { font-style: italic; color: #718096; font-size: 11px; }
+.result .result-details { text-align: left; margin-top: 6px; }
+
+/* GIF / görsel */
+.result-media {
+    width: 120px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    margin: 2px auto 4px;
+    border: 2px solid #e2e8f0;
+}
+.result-emoji {
+    font-size: 40px;
+    line-height: 1.2;
+}
+
+/* Spinner */
+.spinner {
+    width: 28px;
+    height: 28px;
+    margin: 4px auto;
+    border: 3px solid #bee3f8;
+    border-top-color: #0056b3;
+    border-radius: 50%;
+    animation: beesly-spin 0.9s linear infinite;
+}
+@keyframes beesly-spin { to { transform: rotate(360deg); } }
+
+#toast {
+    background: #1a365d;
+    color: #fff;
+    text-align: center;
+    padding: 5px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-bottom: 8px;
+    display: none;
+    font-weight: bold;
+}
+/* Sekmeler kaldırıldı (0.13.6) */
+.hint { font-size: 11px; color: #a0aec0; text-align: center; margin-top: 8px; }
+.hint i { color: #718096; }
+#uetsVerifyInfo { font-size: 12px; margin-bottom: 6px; color: #4a5568; font-style: italic; }

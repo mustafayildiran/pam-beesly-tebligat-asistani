@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "Pam Beesly - Tebligat Asistanı",
+  "version": "1.0",
+  "description": "UYAP tebligat barkodlarını listeler, PTT'ye otomatik yapıştırır ve UETS durumunu sorgular.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "tabs",
+    "clipboardWrite",
+    "storage",
+    "contextMenus",
+    "alarms"
+  ],
+  "commands": {
+    "beesly-query-selection": {
+      "suggested_key": { "default": "Ctrl+Shift+Y" },
+      "description": "Seçili barkodu Beesly ile sorgula"
+    }
+  },
+  "host_permissions": [
+    "https://*.uyap.gov.tr/*",
+    "https://www.ptt.gov.tr/*",
+    "https://api.ptt.gov.tr/*",
+    "https://ptt.etebligat.gov.tr/*",
+    "https://api.etebligat.gov.tr/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.ptt.gov.tr/*"],
+      "js": ["content-ptt-view.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://ptt.etebligat.gov.tr/*"],
+      "js": ["content-uets.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://*.uyap.gov.tr/*"],
+      "js": ["content-uyap.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Pam Beesly'yi Aç",
+    "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
+  },
+  "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
+}

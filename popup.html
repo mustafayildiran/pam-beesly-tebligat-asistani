@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <header class="dm-header">
+        <div class="dm-logo">DM</div>
+        <div class="dm-titles">
+            <h3>Beesly Tebligat Sorgulama</h3>
+            <span class="dm-sub">Dunder Mifflin · PTT Şubesi</span>
+        </div>
+    </header>
+
+    <div id="toast">Barkod Panoya Kopyalandı!</div>
+
+    <div class="uets-bar">
+        <span id="uetsStatus" class="dot off">● UETS: kontrol ediliyor...</span>
+        <span>
+            <button id="uetsFormBtn" class="btn btn-secondary">Giriş Yap</button>
+            <button id="uetsBtn" class="btn">Bağlan</button>
+        </span>
+    </div>
+
+    <div id="uetsForm" class="barcode-item" style="display:none">
+        <div id="uetsStep1">
+            <div class="form-title">UETS Girişi <span class="ux-sub">(şifre eklentide saklanmaz)</span></div>
+            <input id="uetsExtId" type="text" maxlength="17" placeholder="Kullanıcı kodu" />
+            <input id="uetsPass" type="password" placeholder="Şifre" />
+            <div class="row captcha-row">
+                <img id="uetsCaptchaImg" alt="Güvenlik kodu" />
+                <button id="uetsCaptchaBtn" class="btn btn-secondary" title="Yeni kod">↻</button>
+            </div>
+            <input id="uetsCaptchaCode" type="text" placeholder="Güvenlik kodu" />
+            <div class="row">
+                <button id="uetsLogoutBtn" class="btn btn-secondary">Çıkış</button>
+                <button id="uetsLoginBtn" class="btn">Giriş</button>
+            </div>
+            <button id="uetsTestBtn" class="btn btn-secondary" style="width:100%;margin:6px 0 0 0">Bağlantıyı Test Et</button>
+        </div>
+        <div id="uetsStep2" style="display:none">
+            <div class="form-title">Doğrulama kodu</div>
+            <div id="uetsVerifyInfo" class="ux-sub"></div>
+            <input id="uetsValidationCode" type="text" inputmode="numeric" placeholder="SMS / e-posta kodu" />
+            <div class="row">
+                <button id="uetsResendBtn" class="btn btn-secondary">Tekrar Gönder</button>
+                <button id="uetsVerifyBtn" class="btn">Doğrula</button>
+            </div>
+        </div>
+        <div id="uetsFormMsg" class="result" style="display:none"></div>
+    </div>
+
+    <div id="container">
+        <div class="msg">Sayfa taranıyor...</div>
+    </div>
+
+    <div class="hint">UYAP'ta barkodu seç + sağ tık / <b>Ctrl+Shift+Y</b><br>• <i>"That's what she said."</i> — Steve Carell</div>
+    <script src="popup.js"></script>
+</body>
+</html>
