@@ -52,34 +52,74 @@ document.addEventListener('DOMContentLoaded', () => {
   // UETS bağlantı durumu: content-uets.js UETS sayfaları her açıldığında
   // oturum varsa beeslyUets={connected:true} yazar.
   const uetsStatus = document.getElementById('uetsStatus');
-  const uetsBtn = document.getElementById('uetsBtn');
   const uetsForm = document.getElementById('uetsForm');
   const uetsFormBtn = document.getElementById('uetsFormBtn');
+  const uetsCheckBtn = document.getElementById('uetsCheckBtn');
   async function refreshUetsStatus() {
     try {
       const resp = await chrome.runtime.sendMessage({ type: 'BEESLY_UETS_STATUS' });
       const connected = !!resp?.status?.connected;
       if (connected) {
-        uetsStatus.textContent = '● UETS: bağlı ✓';
+        let ageTxt = '';
+        try {
+          const at = resp.status.at || 0;
+          if (at) {
+            const m = Math.round((Date.now() - at) / 60000);
+            if (m >= 60) ageTxt = ' · ' + Math.floor(m / 60) + 'sa' + (m % 60 ? ' ' + (m % 60) + 'dk' : '');
+            else if (m > 0) ageTxt = ' · ' + m + 'dk';
+          }
+        } catch (_) {}
+        uetsStatus.textContent = '● UETS: bağlı ✓' + ageTxt;
         uetsStatus.className = 'dot on';
-        // Bağlıyken giriş düğmeleri gizlenir, rozet tek başına durur
+        // Bağlıyken giriş düğmesi gizlenir, rozet + kontrol kalır
         uetsFormBtn.style.display = 'none';
-        uetsBtn.style.display = 'none';
+        uetsCheckBtn.style.display = '';
         uetsForm.style.display = 'none';
       } else {
         uetsStatus.textContent = '● UETS: giriş gerekli';
         uetsStatus.className = 'dot off';
         uetsFormBtn.style.display = '';
-        uetsBtn.style.display = '';
-        uetsBtn.innerText = 'Bağlan';
+        uetsCheckBtn.style.display = 'none';
       }
     } catch (_) {}
   }
   refreshUetsStatus();
-  uetsBtn.addEventListener('click', async () => {
-    // Bağlıyken düğme gizli olduğundan burası yalnız giriş içindir
-    await chrome.runtime.sendMessage({ type: 'BEESLY_OPEN_LOGIN' });
-    window.close();
+  // Popup açıkken oturumu periyodik yokla: düşmüşse giriş formu gelsin, bağlıysa öyle kalsın
+  setInterval(refreshUetsStatus, 30000);
+  uetsCheckBtn.addEventListener('click', async () => {
+    uetsStatus.textContent = '● UETS: kontrol ediliyor...';
+    try {
+      const r = await chrome.runtime.sendMessage({ type: 'BEESLY_UETS_TOKENINFO' });
+      if (!r?.present) {
+        refreshUetsStatus();
+        return;
+      }
+      if (r.expired || r.live === false) {
+        // Jeton ölü (süre dolmuş ya da sunucu reddetmiş): giriş formu gelsin
+        uetsStatus.textContent = '● UETS: bağlantı doğrulanamadı';
+        uetsStatus.className = 'dot off';
+        uetsFormBtn.style.display = '';
+        uetsCheckBtn.style.display = 'none';
+        uetsForm.style.display = 'block';
+        return;
+      }
+      if (r.live === true) {
+        uetsStatus.textContent = '● UETS: bağlı ✓ · canlı doğrulandı';
+        uetsStatus.className = 'dot on';
+        return;
+      }
+      // live null: geçici arıza, süre bilgisine düş
+      if (r.expInMin !== null && r.expInMin !== undefined) {
+        const h = Math.floor(r.expInMin / 60);
+        const m = r.expInMin % 60;
+        uetsStatus.textContent = '● UETS: bağlı ✓ · jeton ' + (h > 0 ? h + 'sa ' + m + 'dk' : m + 'dk') + ' geçerli';
+      } else {
+        uetsStatus.textContent = '● UETS: bağlı ✓ · jeton mevcut (süre okunamadı)';
+      }
+      uetsStatus.className = 'dot on';
+    } catch (_) {
+      refreshUetsStatus();
+    }
   });
 
   // Gömülü giriş formu (UETS şifresi + güvenlik kodu, sitenin akışıyla birebir)
@@ -89,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const uetsCaptchaCode = document.getElementById('uetsCaptchaCode');
   const uetsFormMsg = document.getElementById('uetsFormMsg');
   let captchaKey = '';
+  let captchaLoadedAt = 0;
   function formMsg(text, ok) {
     uetsFormMsg.style.display = 'block';
     uetsFormMsg.className = 'result ' + (ok ? 'ok' : 'err');
@@ -100,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const resp = await chrome.runtime.sendMessage({ type: 'BEESLY_UETS_CAPTCHA' });
       if (resp?.ok) {
         captchaKey = resp.captchaKey || '';
+        captchaLoadedAt = Date.now();
         uetsCaptchaImg.src = resp.image;
       } else {
         formMsg(resp?.error || 'Güvenlik kodu alınamadı.', false);
@@ -116,6 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.getElementById('uetsCaptchaBtn').addEventListener('click', loadCaptcha);
   document.getElementById('uetsLoginBtn').addEventListener('click', async () => {
+    // Güvenlik kodu tek kullanımlık/süreli: bayatsa önce yenile, eski kodla deneme
+    if (!captchaKey || Date.now() - captchaLoadedAt > 90000) {
+      formMsg('Güvenlik kodu yenilendi, yeni kodu girip tekrar deneyin.', false);
+      loadCaptcha();
+      return;
+    }
     formMsg('Giriş yapılıyor...', false);
     const resp = await chrome.runtime.sendMessage({
       type: 'BEESLY_UETS_LOGIN',
@@ -283,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function boxNotFound(box) {
+  function boxNotFound(box, detail) {
     box.style.display = 'block';
     box.className = 'result err';
     box.innerHTML = '';
@@ -295,6 +343,12 @@ document.addEventListener('DOMContentLoaded', () => {
     sub.className = 'ux-sub';
     sub.textContent = 'Michael panikledi ama evrak gerçekten yok.';
     box.append(t, sub);
+    if (detail) {
+      const d = document.createElement('div');
+      d.style.cssText = 'margin-top:4px;color:#777;font-size:11px';
+      d.textContent = detail;
+      box.appendChild(d);
+    }
   }
 
   function boxError(box, detail) {
@@ -331,11 +385,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function paintResult(box, text, ok, result, barcode) {
+    // "Başarıyla getirildi" paketinde KAYIT YOK yazıyorsa panik moduna al
+    if (ok && /KAYIT YOK|BULUNAMADI/i.test(text)) ok = false;
     if (ok) {
       boxSuccess(box, text, result ? detailsHtml(result, barcode) : '');
       return;
     }
-    if (/bulunamadı|kayıt yok|boş yanıt|bulunmadı/i.test(text)) boxNotFound(box);
+    // Türkçe-İ tuzağı: /i bayrağı büyük I ile eşleşmez, önce büyütüp düz kalıpla bak
+    const upper = String(text || '').toLocaleUpperCase('tr-TR');
+    if (/KAYIT YOK|BULUNAMADI|BOŞ YANIT|BULUNMADI/.test(upper)) boxNotFound(box, text);
     else boxError(box, text);
     if (barcode) appendDebug(box, barcode);
   }

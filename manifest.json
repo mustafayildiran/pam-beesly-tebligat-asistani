@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Pam Beesly - Tebligat Asistanı",
-  "version": "1.0",
+  "name": "Beesly Desk - Tebligat Asistanı",
+  "version": "1.0.7",
   "description": "UYAP tebligat barkodlarını listeler, PTT'ye otomatik yapıştırır ve UETS durumunu sorgular.",
   "permissions": [
     "activeTab",
@@ -47,7 +47,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Pam Beesly'yi Aç",
+    "default_title": "Beesly Desk'i Aç",
     "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
   },
   "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }

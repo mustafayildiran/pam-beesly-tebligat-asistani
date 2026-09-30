@@ -206,10 +206,11 @@ function autoFillUets(barcode) {
   return true;
 }
 
-async function saveResult(barcode, summary, raw) {
+async function saveResult(barcode, summary, raw, notify = true) {
   await chrome.storage.local.set({
     ["beeslyResult_" + barcode]: { at: Date.now(), summary, raw: raw ?? null }
   });
+  if (!notify) return; // ara kayıt: sekme kapanmasın, rozet değişmesin
   try {
     chrome.runtime.sendMessage({
       type: "BEESLY_QUERY_DONE",
@@ -218,6 +219,38 @@ async function saveResult(barcode, summary, raw) {
       error: summary?.text || ""
     });
   } catch (_) {}
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+// Site oturumu yedeği: form doldurulup Sorgula'ya basıldıktan sonra
+// sonuç tablosunu sayfadan oku (API jetonu yokken site girişiyle çalışır)
+async function scrapeUetsPage(timeoutMs = 35000) {
+  const t0 = Date.now();
+  const skip = /^(Ana Sayfa|Gelen Kutusu|Gönderilen|Arşiv|Raporlar|Klasörler|Adres Defteri|Ayarlar|Çıkış|Gönderi Sorgulama|Gizlilik|Yasal|İletişim|UETS)/;
+  while (Date.now() - t0 < timeoutMs) {
+    await sleep(1500);
+    let txt = "";
+    try { txt = document.body?.innerText || ""; } catch (_) {}
+    const lines = txt.split("\n").map((s) => s.trim()).filter((s) => s.length > 2 && !skip.test(s));
+    const good = lines.filter(
+      (l) => /\b\d{2}[./]\d{2}[./]\d{4}\b/.test(l) || /KABUL|TEBL[Iİ]G|TESL[Iİ]M|OKUN|KANUN|RED|İADE|GÖNDER[Iİ]LD[Iİ]/.test(l)
+    );
+    if (good.length >= 1 && good.some((l) => /KABUL|TEBL[Iİ]G|TESL[Iİ]M|OKUN|KANUN/.test(l))) {
+      const head = good.find((l) => /KABUL|TEBL[Iİ]G|TESL[Iİ]M|OKUN|KANUN/.test(l)) || good[0];
+      return {
+        summary: {
+          ok: true,
+          text: head,
+          moves: good.slice(0, 20).map((t) => ({ tarih: "", aciklama: t })),
+          scraped: true
+        }
+      };
+    }
+  }
+  return null;
 }
 
 async function handleStoredBarcode() {
@@ -243,25 +276,37 @@ async function handleStoredBarcode() {
     beeslyBanner("Tebligat başarıyla getirildi!", true);
     return; // API tuttuysa formu doldurmaya gerek yok
   } catch (e) {
-    // 401/token yoksa bile forma düş (sayfa kendi session'ı ile çözebilir)
-    await saveResult(beeslyBarcode, { ok: false, text: String(e.message || e) });
+    // 401/token yoksa bile forma düş (sayfa kendi session'ı ile çözebilir);
+    // ara kayıt sessizdir, sekme kapanmaz
+    await saveResult(beeslyBarcode, { ok: false, text: String(e.message || e) }, null, false);
   }
 
-  // 2) Form doldurma fallback'i
+  // 2) Form doldurma + sayfadan sonuç okuma (site oturumu yedeği)
   let tries = 0;
   const timer = setInterval(() => {
     tries++;
     if (autoFillUets(beeslyBarcode) || tries > 20) clearInterval(timer);
   }, 1000);
+  const found = await scrapeUetsPage(35000);
+  clearInterval(timer);
+  if (found) {
+    await saveResult(beeslyBarcode, found.summary, null, true);
+    beeslyBanner("Tebligat başarıyla getirildi!", true);
+  } else {
+    await saveResult(
+      beeslyBarcode,
+      { ok: false, text: "Sayfada sonuç okunamadı. Sekmeyi açıp giriş durumunu kontrol edin." },
+      null,
+      true
+    );
+  }
 }
 
-// Oturum durumu: UETS sayfası her açıldığında eklentiye bildir.
-// Şifre/token saklanmaz, sadece "bağlı / giriş gerekli" bilgisi yazılır.
+// Oturum köprüsü her UETS sayfasında çalışır (giriş bayrağı yazılmaz;
+// rozetin tek kaynağı eklenti jetonudur).
 (async () => {
   try {
     await bridgeSiteSession();
-    const connected = getTokenCandidates().length > 0;
-    await chrome.storage.local.set({ beeslyUets: { connected, at: Date.now() } });
   } catch (_) {}
 })();
 

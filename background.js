@@ -6,8 +6,9 @@
 // Olmazsa (401/403/ağ hatası) yedek: ptt.gov.tr sekmesinde Turnstile ile sorgu.
 
 const UETS_TRACK_PAGE = "https://ptt.etebligat.gov.tr/track-message";
-const UETS_LOGIN_PAGE = "https://ptt.etebligat.gov.tr/login";
 const UETS_API = "https://api.etebligat.gov.tr/v1";
+// Canlı yoklama barkodu (gerçek e-tebligat): jeton bununla test edilir
+const UETS_CANARY = "5002781316429";
 
 function fmtExtId(v) {
   // Siteyle aynı format: 15 haneyse 5-5-5 tireli yaz
@@ -138,6 +139,14 @@ async function queryUetsDirect(barcode) {
     }
   }
   if (r.status === 401 || r.status === 403) {
+    // 2 saatten yaşlı token ilk redde ölür (kıyak yok); genç token için çift teyit
+    if (ageMin > 120) {
+      await setUetsFails(0);
+      const e = new Error("auth");
+      e.code = "SESSION_DEAD";
+      e.tokenAgeMin = ageMin;
+      throw e;
+    }
     const fails = await uetsFailCount();
     if (fails >= 1) {
       await setUetsFails(0);
@@ -488,6 +497,10 @@ function parsePttResult(json) {
   const sd = row.sondurum || {};
   const teslim = !!sd.teslim_durum_aciklama && sd.teslim_tarihi && sd.teslim_tarihi !== "0";
   const durum = teslim ? sd.teslim_durum_aciklama : sd.son_durum_aciklama || apiMsg || "Durum bilgisi yok";
+  // "KAYIT YOK" başarı paketinde de gelebiliyor → hata say
+  if (/KAYIT YOK|BULUNAMADI/i.test(durum)) {
+    return { summary: { ok: false, text: "KAYIT YOK" }, raw: json };
+  }
   const durumTarihi = formatPttTarih(teslim ? sd.teslim_tarihi : sd.son_durum_tarihi);
   const tSlash = teslim ? slash(sd.teslim_tarihi) : "";
   const teslimDetay = teslim
@@ -662,27 +675,61 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         }
       } catch (_) {}
       sendResponse({ ok: true });
-    } else if (msg?.type === "BEESLY_OPEN_LOGIN") {
-      await chrome.tabs.create({ url: UETS_LOGIN_PAGE });
-      sendResponse({ ok: true });
     } else if (msg?.type === "PTT_WARM") {
       // Popup açıldı: PTT sekmesini + Turnstile token'ını önceden hazırla
       pttWarmUp();
       sendResponse({ ok: true });
     } else if (msg?.type === "BEESLY_UETS_STATUS") {
+      // Tek doğruluk kaynağı: eklenti oturum jetonu (sayfa bayrakları bayatlayabiliyor)
       const sess = await sessGet("beeslyUetsToken");
-      if (sess?.beeslyUetsToken?.access_token) {
-        sendResponse({ status: { connected: true, at: sess.beeslyUetsToken.at || 0, via: "form" } });
-        return;
-      }
-      const data = await chrome.storage.local.get("beeslyUets");
-      const flag = data.beeslyUets;
-      // Sayfa bayrağı 24 saatten eskiyse bayat say (yanıltıcı "bağlı" rozeti olmasın)
-      const fresh = flag?.connected && flag.at && Date.now() - flag.at < 24 * 60 * 60 * 1000;
-      sendResponse({ status: fresh ? flag : { connected: false, at: 0 } });
+      const ok = !!sess?.beeslyUetsToken?.access_token;
+      sendResponse({
+        status: ok
+          ? { connected: true, at: sess.beeslyUetsToken.at || 0, via: "form" }
+          : { connected: false, at: 0 }
+      });
     } else if (msg?.type === "BEESLY_UETS_TOKEN") {
       const sess = await sessGet("beeslyUetsToken");
       sendResponse({ token: sess?.beeslyUetsToken?.access_token || null });
+    } else if (msg?.type === "BEESLY_UETS_TOKENINFO") {
+      // Canlı kontrol: önce jeton süresine bakılır, sonra gerçek barkodla
+      // sahaya sorulur. Sahte "geçerli" jetonlar böyle yakalanır.
+      const sess = await sessGet("beeslyUetsToken");
+      const tok = sess?.beeslyUetsToken;
+      if (!tok?.access_token) {
+        sendResponse({ present: false });
+        return;
+      }
+      let expInMin = null;
+      try {
+        const parts = String(tok.access_token).split(".");
+        if (parts.length === 3) {
+          let b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+          while (b64.length % 4) b64 += "=";
+          const payload = JSON.parse(atob(b64));
+          if (payload?.exp) expInMin = Math.round((payload.exp * 1000 - Date.now()) / 60000);
+        }
+      } catch (_) {}
+      const expired = expInMin !== null && expInMin <= 0;
+      if (expired) {
+        await sessRemove("beeslyUetsToken");
+        await chrome.storage.local.set({ beeslyUets: { connected: false, at: Date.now() } });
+        sendResponse({ present: true, expInMin, expired: true, live: false, liveError: "süre dolmuş" });
+        return;
+      }
+      try {
+        await queryUetsDirect(UETS_CANARY);
+        sendResponse({ present: true, expInMin, expired: false, live: true });
+      } catch (e) {
+        if (e.code === "SESSION_DEAD" || e.code === "NO_SESSION") {
+          await sessRemove("beeslyUetsToken");
+          await chrome.storage.local.set({ beeslyUets: { connected: false, at: Date.now() } });
+          sendResponse({ present: true, expInMin, expired: false, live: false, liveError: "sunucu reddetti" });
+        } else {
+          await setUetsFails(0); // geçici arıza sayacı kirletmesin
+          sendResponse({ present: true, expInMin, expired: false, live: null, liveError: String(e.message || e) });
+        }
+      }
     } else if (msg?.type === "BEESLY_UETS_CAPTCHA") {
       const r = await fetch(`${UETS_API}/captcha`, { method: "GET" });
       if (!r.ok) throw new Error("Güvenlik kodu alınamadı: " + r.status);
