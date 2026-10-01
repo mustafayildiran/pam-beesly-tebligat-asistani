@@ -600,8 +600,11 @@ document.addEventListener('DOMContentLoaded', () => {
           container.appendChild(item);
 
           // Popup açıldığında daha önce alınmış sonuç varsa göster (saatiyle: eski hata tanınsın)
+          // 1 saatten eski sonuç gösterilmez — dünün verisi bugünün kararı olmasın
           chrome.runtime.sendMessage({ type: 'BEESLY_GET_RESULT', barcode }).then((resp) => {
             if (resp?.result?.summary) {
+              const age = resp.result.at ? Date.now() - resp.result.at : Infinity;
+              if (age > 60 * 60 * 1000) return;
               const s = resp.result.summary;
               let when = '';
               try {
