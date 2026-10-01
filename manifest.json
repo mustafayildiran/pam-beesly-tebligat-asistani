@@ -43,6 +43,12 @@
       "matches": ["*://*.uyap.gov.tr/*"],
       "js": ["content-uyap.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://avukat.uyap.gov.tr/*"],
+      "js": ["lib/pizzip.min.js", "lib/FileSaver.min.js", "content-uyap-sablon.js"],
+      "css": ["content-uyap-sablon.css"],
+      "run_at": "document_end"
     }
   ],
   "action": {
