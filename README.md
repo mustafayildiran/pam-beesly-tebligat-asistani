@@ -19,6 +19,7 @@ UYAP Avukat Portal'daki tebligat barkodlarını tek tıkla sorgulayan Chrome ekl
 - **Eklenti içi UETS girişi:** kullanıcı kodu + şifre + güvenlik kodu + SMS onayı; e-Devlet/e-İmza için siteye yönlendirme
 - **Temiz çalışma:** sorgu sekmeleri iş bitince otomatik kapanır, UYAP odağı kaybolmaz, barkod tek tıkla panoya kopyalanır
 - **The Office temalı arayüz** (Dunder Mifflin · PTT Şubesi)
+- **EYP görüntüleyici:** UYAP'ta `.eyp` dosyalarını indirmeden önizleme (sayfa içi 👁 Görüntüle düğmeleri + yüzen 📦 EYP Aç paneli)
 
 ## Nasıl çalışır?
 
@@ -72,6 +73,7 @@ Bu bölüm özellikle meslektaşlarımız için ayrıntılı yazılmıştır. Ö
 | `clipboardWrite` | Barkodu panoya kopyalamak için |
 | `contextMenus` | Sağ-tık kısayolu için |
 | `alarms` | Boşta kalan sorgu sekmesini kapatmak için |
+| `downloads`, `webRequest` | EYP görüntüleyici: indirmeyi yakalayıp önizlemeye dönüştürmek için (dosya indirilmez) |
 
 Kodun tamamı bu depoda açıktır; tarayıcının Geliştirici Araçları → Ağ sekmesinden trafiği kendiniz de denetleyebilirsiniz.
 

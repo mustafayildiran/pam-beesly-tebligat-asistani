@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EYP Görüntüleyici</title>
+<link rel="stylesheet" href="eyp-viewer.css">
+<style>
+  body { margin: 0; background: #0f172a; font-family: "Segoe UI", system-ui, Arial, sans-serif; }
+  #drop { border: 2px dashed #64748b; border-radius: 12px; color: #e2e8f0; text-align: center; padding: 34px 18px; margin: 18px auto; max-width: 760px; cursor: pointer; }
+  #drop:hover { border-color: #fff; }
+  #app { max-width: 1100px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; }
+  #app .eyp-modal { width: auto; height: 78vh; box-shadow: none; border-radius: 0; }
+  .hint { color: #94a3b8; text-align: center; font-size: 12px; margin: 10px; }
+  header.top { color: #fff; text-align: center; padding: 18px 10px 0; }
+  header.top h1 { font-size: 18px; margin: 0; }
+  header.top p { font-size: 12px; color: #94a3b8; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>📦 UYAP EYP Görüntüleyici</h1>
+  <p>.eyp / evrak_*.zip / .udf dosyasını seçin veya sürükleyip bırakın. Dosyalar yalnızca tarayıcınızda çözümlenir, sunucuya gönderilmez.</p>
+</header>
+<div id="drop">Dosya seçmek için tıklayın ya da buraya sürükleyip bırakın<br><small>(.eyp, .zip, .udf)</small>
+  <input type="file" id="file" accept=".eyp,.zip,.udf,.pdf" hidden>
+</div>
+<div id="app" hidden>
+  <div class="eyp-modal">
+    <div class="eyp-header">
+      <span class="eyp-badge">EYP</span>
+      <span class="eyp-title" id="eyp-title">EYP</span>
+      <button class="eyp-btn-light" id="eyp-back" hidden>← Geri</button>
+    </div>
+    <div class="eyp-meta-bar" id="eyp-meta"></div>
+    <div class="eyp-body">
+      <div class="eyp-sidebar" id="eyp-list"></div>
+      <div class="eyp-main">
+        <div class="eyp-preview-bar" id="eyp-preview-bar"></div>
+        <div class="eyp-preview" id="eyp-preview"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="hint">İpucu: UYAP'ta “Desteklenmeyen belge türü” hatası aldığınız ek, çoğunlukla evrak zip'i içindeki <b>(Ek N)….eyp</b> dosyasıdır. Önce evrakı indirin, sonra bu sayfaya sürükleyin — içindeki EYP'yi tek tıkla açarsınız.</p>
+<script src="eyp-jszip.min.js"></script>
+<script src="eyp-parser.js"></script>
+<script src="eyp-viewer.js"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Beesly Desk - Tebligat Asistanı",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "UYAP tebligat barkodlarını listeler, PTT'ye otomatik yapıştırır ve UETS durumunu sorgular.",
   "permissions": [
     "activeTab",
@@ -10,7 +10,9 @@
     "clipboardWrite",
     "storage",
     "contextMenus",
-    "alarms"
+    "alarms",
+    "downloads",
+    "webRequest"
   ],
   "commands": {
     "beesly-query-selection": {
@@ -49,6 +51,26 @@
       "js": ["lib/pizzip.min.js", "lib/FileSaver.min.js", "content-uyap-sablon.js"],
       "css": ["content-uyap-sablon.css"],
       "run_at": "document_end"
+    },
+    {
+      "matches": ["https://avukat.uyap.gov.tr/*", "https://*.uyap.gov.tr/*"],
+      "js": ["eyp-inject.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": ["https://avukat.uyap.gov.tr/*", "https://*.uyap.gov.tr/*"],
+      "js": ["eyp-jszip.min.js", "eyp-parser.js", "eyp-content.js"],
+      "css": ["eyp-viewer.css"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["eyp-jszip.min.js", "eyp-parser.js", "eyp-viewer.js", "eyp-viewer.html"],
+      "matches": ["https://avukat.uyap.gov.tr/*", "https://*.uyap.gov.tr/*"]
     }
   ],
   "action": {

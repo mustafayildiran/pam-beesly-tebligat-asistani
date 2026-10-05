@@ -1,0 +1,56 @@
+/* UYAP EYP Görüntüleyici - modal stilleri (UYAP sayfasıyla çakışmaması için eyp- öneki) */
+#eyp-viewer-overlay {
+  position: fixed; inset: 0; z-index: 2147483647;
+  background: rgba(15, 23, 42, 0.62);
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+}
+#eyp-viewer-overlay[hidden] { display: none !important; }
+.eyp-modal {
+  width: min(1100px, 94vw); height: min(86vh, 900px);
+  background: #fff; border-radius: 12px; overflow: hidden;
+  display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.35);
+}
+.eyp-header {
+  display: flex; align-items: center; gap: 10px;
+  background: #1a3a5f; color: #fff; padding: 10px 14px;
+}
+.eyp-header .eyp-title { font-weight: 600; font-size: 14px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eyp-header .eyp-badge { background: #2e7d32; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+.eyp-header button { border: 0; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 12px; }
+.eyp-btn-light { background: #e8eef5; color: #1a3a5f; }
+.eyp-btn-close { background: #c0392b; color: #fff; }
+.eyp-meta-bar { background: #f1f5f9; border-bottom: 1px solid #e2e8f0; padding: 8px 14px; font-size: 12px; color: #334155; display: flex; gap: 16px; flex-wrap: wrap; }
+.eyp-body { flex: 1; display: flex; min-height: 0; }
+.eyp-sidebar { width: 300px; border-right: 1px solid #e2e8f0; overflow: auto; background: #f8fafc; }
+.eyp-sidebar h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #64748b; margin: 12px 12px 6px; }
+.eyp-file { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; border: 0; background: transparent; padding: 8px 12px; cursor: pointer; font-size: 13px; border-left: 3px solid transparent; }
+.eyp-file:hover { background: #eef2f7; }
+.eyp-file.active { background: #e0ecff; border-left-color: #1a3a5f; }
+.eyp-file .eyp-ext { font-size: 10px; font-weight: 700; background: #1a3a5f; color: #fff; border-radius: 4px; padding: 2px 5px; min-width: 34px; text-align: center; }
+.eyp-file .eyp-ext.eyp-nested { background: #6a1b9a; }
+.eyp-file .eyp-fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eyp-file .eyp-fsize { font-size: 11px; color: #64748b; }
+.eyp-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.eyp-preview-bar { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; align-items: center; font-size: 12px; }
+.eyp-preview { flex: 1; background: #0f172a; min-height: 0; }
+.eyp-preview iframe, .eyp-preview img { width: 100%; height: 100%; border: 0; background: #fff; }
+.eyp-preview pre { color: #e2e8f0; padding: 14px; overflow: auto; height: 100%; margin: 0; font-size: 12px; white-space: pre-wrap; }
+.eyp-empty { color: #cbd5e1; display: flex; height: 100%; align-items: center; justify-content: center; font-size: 14px; text-align: center; padding: 20px; }
+.eyp-fab {
+  position: fixed; right: 18px; bottom: 18px; z-index: 2147483646;
+  background: #1a3a5f; color: #fff; border: 0; border-radius: 30px;
+  padding: 12px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+}
+.eyp-fab:hover { background: #244e7d; }
+.eyp-toast {
+  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+  z-index: 2147483647; background: #111827; color: #fff; font-size: 13px;
+  padding: 10px 16px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+.eyp-inline-btn {
+  background: #2e7d32 !important; color: #fff !important; border: 0 !important;
+  border-radius: 6px !important; padding: 3px 8px !important; margin-left: 6px !important;
+  font-size: 11px !important; cursor: pointer !important; display: inline-block !important;
+}
