@@ -917,7 +917,7 @@ chrome.webRequest.onBeforeRequest.addListener(
       }
     });
   },
-  { urls: ['*://*.uyap.gov.tr/*'] },
+  { urls: ['*://*.uyap.gov.tr/*', '*://uyap.gov.tr/*'] },
   ['requestBody']
 );
 
@@ -930,7 +930,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
       if (h) lastPost.contentType = h.value;
     });
   },
-  { urls: ['*://*.uyap.gov.tr/*'] },
+  { urls: ['*://*.uyap.gov.tr/*', '*://uyap.gov.tr/*'] },
   ['requestHeaders']
 );
 
