@@ -113,9 +113,19 @@
   }
 
   function armBackground(fileName) {
-    try {
-      chrome.runtime.sendMessage({ type: 'EYP_ARM', fileName: fileName || 'belge.eyp' }, function () {});
-    } catch (e) {}
+    // Kurma onayını bekle (söz verilir): indirme, kurma kaydedilmeden başlarsa
+    // background yakalayamaz ve ilk deneme boşa gider.
+    return new Promise((resolve) => {
+      let done = false;
+      const to = setTimeout(() => { if (!done) { done = true; resolve(false); } }, 4000);
+      try {
+        chrome.runtime.sendMessage({ type: 'EYP_ARM', fileName: fileName || 'belge.eyp' }, function () {
+          if (!done) { done = true; clearTimeout(to); resolve(true); }
+        });
+      } catch (e) {
+        if (!done) { done = true; clearTimeout(to); resolve(false); }
+      }
+    });
   }
 
   // Tanı günlüğü: son 20 ağ denemesi (F12 Console'da __eypDebug() ile görülür)
@@ -697,7 +707,8 @@
     // 3) UYAP'ın kendi indirme/önizleme akışını tetikle, baytları ağdan yakala.
     //    Background 25 sn boyunca indirme isteğini izler; indirme başlarsa
     //    iptal edip bize verir, biz doğrudan açarız. Kullanıcı dosya görmez.
-    armBackground(fileName);
+    //    ÖNCE kurma onayı beklenir (yoksa ilk tıklama boşa gider).
+    await armBackground(fileName);
     const mySeq = setPending(fileName);
     toast('Açılıyor… (dosya indirilmeden görüntülenecek)', 3000);
     // Tıklama sonrası UYAP'ın gerçekte ne istediğini kaynak zaman çizelgesinden
@@ -822,6 +833,8 @@
     document.querySelectorAll('td, span, div, li').forEach((el) => {
       if (el.dataset.eypTextHooked || nearbyButton(el)) return;
       if (inChrome(el) || !visible(el)) return;
+      // Bağlantı kolunun baktığı A öğesine ikinci düğme koyma
+      if (el.tagName === 'A' && el.dataset.eypHooked) return;
       const isLeaf = el.childNodes.length === 1 && el.childNodes[0].nodeType === 3;
       if (!isLeaf) return;
       const txt = el.textContent.trim();
@@ -836,6 +849,16 @@
       });
       el.appendChild(btn);
     });
+    // Son süpürme: aynı satırda iki düğme kaldıysa ilkini bırak
+    try {
+      const seenRow = new Set();
+      document.querySelectorAll('.eyp-inline-btn').forEach((b) => {
+        const row = (b.closest && (b.closest('tr') || b.closest('li') || b.closest('[role="row"]'))) || b.parentElement;
+        if (!row) return;
+        if (seenRow.has(row)) { b.remove(); return; }
+        seenRow.add(row);
+      });
+    } catch (_) {}
   }
 
   function scanErrorDialog() {
@@ -892,6 +915,8 @@
   hookClicks();
   observe();
   injectInlineButtons();
+  // Service worker'ı uyanık tut (ilk tıklamadaki kurma yarışını kapatır)
+  try { chrome.runtime.sendMessage({ type: 'EYP_WAKE' }); } catch (_) {}
   setInterval(scanErrorDialog, 1500);
   console.log('[EYP Görüntüleyici] aktif (v1.1.6, MAIN-kanca + indirme-yakalama)');
 })();
