@@ -9,6 +9,17 @@
   window.__eypViewerLoaded = true;
 
   const state = { stack: [], lastAttempt: null, pendingCapture: null };
+  let captureSeq = 0; // bekleyen yakalama nesli: eski zamanlayıcılar yeni denemeyi öldüremez
+  function setPending(fileName) {
+    captureSeq += 1;
+    state.pendingCapture = { fileName: fileName, at: Date.now(), seq: captureSeq };
+    return captureSeq;
+  }
+  function clearPending(seq) {
+    if (seq === undefined || (state.pendingCapture && state.pendingCapture.seq === seq)) {
+      state.pendingCapture = null;
+    }
+  }
   const objectUrls = [];
   const netCache = []; // {url, fileName, buffer, time, source}
   const MAX_CACHE = 10;
@@ -50,7 +61,7 @@
       const ageOk = true;
       if (ageOk && (looksEyp || (Date.now() - want.at) < 20000)) {
         const p = state.pendingCapture;
-        state.pendingCapture = null;
+        if (state.pendingCapture === p) state.pendingCapture = null;
         toast('Dosya yakalandı, açılıyor: ' + (fileName || ''), 2000);
         openBuffer(buffer, fileName || p.fileName || 'belge.eyp');
         return true;
@@ -687,7 +698,7 @@
     //    Background 25 sn boyunca indirme isteğini izler; indirme başlarsa
     //    iptal edip bize verir, biz doğrudan açarız. Kullanıcı dosya görmez.
     armBackground(fileName);
-    state.pendingCapture = { fileName: fileName, at: Date.now() };
+    const mySeq = setPending(fileName);
     toast('Açılıyor… (dosya indirilmeden görüntülenecek)', 3000);
     // Tıklama sonrası UYAP'ın gerçekte ne istediğini kaynak zaman çizelgesinden
     // izle; belgeye benzeyen ilk yanıtı alıp doğrudan aç. (Kanca ve indirme
@@ -695,7 +706,7 @@
     const seenRes = new Set(resourceUrls());
     let observed = 0;
     const poll = setInterval(function () {
-      if (!state.pendingCapture) { clearInterval(poll); return; }
+      if (!state.pendingCapture || state.pendingCapture.seq !== mySeq) { clearInterval(poll); return; }
       let fresh = [];
       try {
         fresh = resourceUrls().filter(function (u) {
@@ -712,19 +723,23 @@
       cands.sort(function (a, b) { return (/\.eyp/i.test(b) ? 1 : 0) - (/\.eyp/i.test(a) ? 1 : 0); });
       if (!cands.length) return;
       fetchBuf('gozlem-doc', cands[0], {}).then(function (r) {
-        if (!state.pendingCapture) return;
-        state.pendingCapture = null;
+        if (!state.pendingCapture || state.pendingCapture.seq !== mySeq) return;
+        clearPending(mySeq);
         clearInterval(poll);
         return openBuffer(r.buffer, guessName(cands[0]) || fileName);
       }).catch(function () { /* sonraki tur devam eder */ });
     }, 800);
-    setTimeout(function () { clearInterval(poll); }, 21000);
+    setTimeout(function () { clearInterval(poll); }, 31000);
+    // 20. saniyede hâlâ bekleniyorsa background penceresini yenile (25 sn dolmak üzere)
     setTimeout(function () {
-      if (state.pendingCapture) {
-        state.pendingCapture = null;
+      if (state.pendingCapture && state.pendingCapture.seq === mySeq) armBackground(fileName);
+    }, 20000);
+    setTimeout(function () {
+      if (state.pendingCapture && state.pendingCapture.seq === mySeq) {
+        clearPending(mySeq);
         toastAction('Dosya yakalanamadı' + (observed ? ' (' + observed + ' istek görüldü).' : '.') + ' ', 'Tanıyı kopyala', 12000);
       }
-    }, 20000);
+    }, 30000);
     try {
       const el = target.clickEl || target.el;
       // En yakın tıklanabilir öğeyi bul
@@ -761,8 +776,8 @@
         // UYAP'ın kendi akışını bozma; yakalama için izle + background'u kur
         trackUrl(t.url, t.fileName);
         armBackground(t.fileName || 'belge.eyp');
-        state.pendingCapture = { fileName: t.fileName || 'belge.eyp', at: Date.now() };
-        setTimeout(() => { state.pendingCapture = null; }, 25000);
+        const hs = setPending(t.fileName || 'belge.eyp');
+        setTimeout(() => { clearPending(hs); }, 25000);
         setTimeout(scanErrorDialog, 600);
       }
     }, true);
@@ -852,8 +867,8 @@
     box.appendChild(btn);
     // Hata diyaloğu = UYAP önizlemesi tetiklendi demek; 20 sn yakalamayı açık tut
     if (!state.pendingCapture) {
-      state.pendingCapture = { fileName: 'belge.eyp', at: Date.now() };
-      setTimeout(() => { state.pendingCapture = null; }, 20000);
+      const es = setPending('belge.eyp');
+      setTimeout(() => { clearPending(es); }, 20000);
     }
   }
 
