@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Beesly Desk - Tebligat AsistanÄ±",
   "version": "1.1.1",
-  "description": "UYAP tebligat barkodlarÄ±nÄ± listeler, PTT'ye otomatik yapÄ±ÅŸtÄ±rÄ±r ve UETS durumunu sorgular.",
+  "description": "Tebligat barkodlarını tek tıkla sorgulayan UYAP asistanı: PTT, UETS, EYP",
   "permissions": [
     "activeTab",
     "scripting",
