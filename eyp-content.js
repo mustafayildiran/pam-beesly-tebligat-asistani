@@ -703,8 +703,19 @@
   }
 
   function injectInlineButtons() {
+    // Üst menü/navigasyon alanlarına dokunma (sahte "Görüntüle" düğmeleri buradan çıkıyordu)
+    function inChrome(el) {
+      try { return !!el.closest('header, nav, footer, aside, .navbar, .menu, .ui-menubar'); } catch (_) { return false; }
+    }
+    function visible(el) {
+      try {
+        const r = el.getBoundingClientRect();
+        return (r.width > 0 || r.height > 0) && el.offsetParent !== null;
+      } catch (_) { return true; }
+    }
     document.querySelectorAll('a[href*=".eyp" i], [download*=".eyp" i], [title*=".eyp" i]').forEach((a) => {
       if (a.dataset.eypHooked) return;
+      if (inChrome(a) || !visible(a)) return;
       a.dataset.eypHooked = '1';
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -719,6 +730,7 @@
     // Bağlantısız .eyp metin satırları (UYAP tablo hücreleri)
     document.querySelectorAll('td, span, div, li').forEach((el) => {
       if (el.dataset.eypTextHooked || el.querySelector(':scope > .eyp-inline-btn')) return;
+      if (inChrome(el) || !visible(el)) return;
       const isLeaf = el.childNodes.length === 1 && el.childNodes[0].nodeType === 3;
       if (!isLeaf) return;
       const txt = el.textContent.trim();
@@ -769,32 +781,8 @@
     }
   }
 
-  function openFilePicker() {
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = '.eyp,.zip,.udf,.pdf,application/zip';
-    inp.multiple = false;
-    inp.onchange = async () => {
-      const f = inp.files[0];
-      if (!f) return;
-      const buf = await f.arrayBuffer();
-      state.stack = [];
-      await openBuffer(buf, f.name);
-    };
-    inp.click();
-  }
-
-  function ensureFab() {
-    if (window.self !== window.top) return; // iframe'lerde yüzen düğme gösterme
-    if (document.getElementById('eyp-fab')) return;
-    const b = document.createElement('button');
-    b.id = 'eyp-fab';
-    b.className = 'eyp-fab';
-    b.textContent = '📦 EYP Aç';
-    b.title = 'İndirdiğiniz .eyp / evrak zip dosyasını seçip görüntüleyin';
-    b.onclick = openFilePicker;
-    document.documentElement.appendChild(b);
-  }
+  // Yüzen "EYP Aç" düğmesi kaldırıldı (gereksiz bulunuyor) — dosya seçimi
+  // yalnızca sayfa içi 👁 Görüntüle düğmeleri ve hata diyaloğu üzerinden yapılır.
 
   function observe() {
     const mo = new MutationObserver(() => {
@@ -812,7 +800,6 @@
   listenBackground();
   hookClicks();
   observe();
-  ensureFab();
   injectInlineButtons();
   setInterval(scanErrorDialog, 1500);
   console.log('[EYP Görüntüleyici] aktif (v1.1.5, MAIN-kanca + indirme-yakalama)');
