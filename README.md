@@ -47,6 +47,7 @@ Bu bölüm özellikle meslektaşlarımız için ayrıntılı yazılmıştır. Ö
 | PTT sorgusu | `api.ptt.gov.tr`, `www.ptt.gov.tr` | Yalnızca barkod numarası |
 | UETS sorgusu | `api.etebligat.gov.tr`, `ptt.etebligat.gov.tr` | Barkod + oturum jetonu |
 | UETS girişi | `api.etebligat.gov.tr` | Kullanıcı kodu + şifre + güvenlik/SMS kodu (yalnızca giriş anında) |
+| Bağlantı yoklaması | `api.etebligat.gov.tr` | Kullanıcının ilk kurulumda bir kez girdiği kendi barkodu (normal sorgu olarak) |
 | Başka hiçbir adrese istek yapılmaz | — | GIF'ler dahil tüm görseller eklenti paketinin içindedir |
 
 ### Cihazda ne saklanıyor?
@@ -54,6 +55,7 @@ Bu bölüm özellikle meslektaşlarımız için ayrıntılı yazılmıştır. Ö
 | Veri | Nerede | Süre / amaç |
 |---|---|---|
 | UETS oturum jetonu | Tarayıcı oturum deposu (+ yeniden başlatmaya dayanıklı yedek) | Sorgular için; Çıkış ile silinir |
+| Yoklama barkodu | Cihaz içi önbellek | İlk kurulumda bir kez sorulur; "Bağlı mıyım?" kontrolünde normal UETS sorgusu olarak kullanılır |
 | Son sorgu sonuçları | Cihaz içi önbellek | Popup'ta hızlı gösterim için |
 | Rozet/bağlantı bayrakları | Cihaz içi önbellek | Arayüz durumu için |
 

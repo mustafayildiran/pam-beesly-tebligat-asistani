@@ -7,8 +7,8 @@
 
 const UETS_TRACK_PAGE = "https://ptt.etebligat.gov.tr/track-message";
 const UETS_API = "https://api.etebligat.gov.tr/v1";
-// Canlı yoklama barkodu (gerçek e-tebligat): jeton bununla test edilir
-const UETS_CANARY = "5002781316429";
+// Yoklama barkodu kullanıcıya aittir (ilk kurulumda bir kez sorulur),
+// kodda sabit barkod tutulmaz.
 
 function fmtExtId(v) {
   // Siteyle aynı format: 15 haneyse 5-5-5 tireli yaz
@@ -718,7 +718,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         return;
       }
       try {
-        await queryUetsDirect(UETS_CANARY);
+        const st = await chrome.storage.local.get("beeslyCanary");
+        const canary = st?.beeslyCanary;
+        if (!canary) {
+          sendResponse({ present: true, expInMin, expired: false, live: null, needsCanary: true });
+          return;
+        }
+        await queryUetsDirect(canary);
         sendResponse({ present: true, expInMin, expired: false, live: true });
       } catch (e) {
         if (e.code === "SESSION_DEAD" || e.code === "NO_SESSION") {

@@ -86,12 +86,50 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshUetsStatus();
   // Popup açıkken oturumu periyodik yokla: düşmüşse giriş formu gelsin, bağlıysa öyle kalsın
   setInterval(refreshUetsStatus, 30000);
+
+  // Yoklama barkodu: ilk kurulumda bir kez sorulur, yalnızca cihazda saklanır
+  const canarySetup = document.getElementById('canarySetup');
+  const canaryInput = document.getElementById('canaryInput');
+  const canaryMsg = document.getElementById('canaryMsg');
+  async function ensureCanary() {
+    try {
+      const d = await chrome.storage.local.get('beeslyCanary');
+      const has = !!d?.beeslyCanary;
+      canarySetup.style.display = has ? 'none' : 'block';
+      return has;
+    } catch (_) {
+      return true;
+    }
+  }
+  ensureCanary();
+  document.getElementById('canarySaveBtn').addEventListener('click', async () => {
+    const code = (canaryInput.value || '').replace(/[\s.-]/g, '');
+    if (!/^5\d{12}$/.test(code)) {
+      canaryMsg.style.display = 'block';
+      canaryMsg.className = 'result err';
+      canaryMsg.textContent = '5 ile başlayan 13 haneli kendi barkodunuzu girin.';
+      return;
+    }
+    await chrome.storage.local.set({ beeslyCanary: code });
+    canaryMsg.style.display = 'block';
+    canaryMsg.className = 'result ok';
+    canaryMsg.textContent = 'Kaydedildi ✓ — bir daha sorulmayacak.';
+    setTimeout(() => { canarySetup.style.display = 'none'; }, 1200);
+  });
+
   uetsCheckBtn.addEventListener('click', async () => {
     uetsStatus.textContent = '● UETS: kontrol ediliyor...';
     try {
       const r = await chrome.runtime.sendMessage({ type: 'BEESLY_UETS_TOKENINFO' });
       if (!r?.present) {
         refreshUetsStatus();
+        return;
+      }
+      if (r.needsCanary) {
+        // Yoklama barkodu henüz kaydedilmemiş: kartı göster
+        canarySetup.style.display = 'block';
+        uetsStatus.textContent = '● UETS: yoklama barkodu gerekli';
+        uetsStatus.className = 'dot off';
         return;
       }
       if (r.expired || r.live === false) {

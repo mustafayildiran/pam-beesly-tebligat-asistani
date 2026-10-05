@@ -15,6 +15,22 @@
 
     <div id="toast">Barkod Panoya Kopyalandı!</div>
 
+    <div id="canarySetup" class="barcode-item" style="display:none">
+        <div class="form-title">📌 Yoklama barkodu (bir kez sorulur)</div>
+        <div class="ux-sub" style="margin-bottom:6px">
+            "Bağlı mıyım?" düğmesi oturumunuzu gerçek bir sorguyla test eder. Bunun için
+            size ait bir e-tebligat barkodu (5 ile başlayan 13 hane) gerekir. Bu barkod
+            yalnızca UETS'e normal sorgu olarak gönderilir, başka hiçbir yere iletilmez
+            ve yalnızca bu cihazda saklanır.
+        </div>
+        <div class="row">
+            <input id="canaryInput" type="text" maxlength="17" placeholder="5… ile başlayan barkodunuz"
+                style="flex:1;padding:6px;font-size:13px;border:1px solid #cbd5e0;border-radius:6px" />
+            <button id="canarySaveBtn" class="btn">Kaydet</button>
+        </div>
+        <div id="canaryMsg" class="result" style="display:none"></div>
+    </div>
+
     <div class="uets-bar">
         <span id="uetsStatus" class="dot off">● UETS: kontrol ediliyor...</span>
         <span>

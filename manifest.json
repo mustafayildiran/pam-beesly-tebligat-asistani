@@ -1,8 +1,8 @@
-{
+﻿{
   "manifest_version": 3,
-  "name": "Beesly Desk - Tebligat Asistanı",
-  "version": "1.1.0",
-  "description": "UYAP tebligat barkodlarını listeler, PTT'ye otomatik yapıştırır ve UETS durumunu sorgular.",
+  "name": "Beesly Desk - Tebligat AsistanÄ±",
+  "version": "1.1.1",
+  "description": "UYAP tebligat barkodlarÄ±nÄ± listeler, PTT'ye otomatik yapÄ±ÅŸtÄ±rÄ±r ve UETS durumunu sorgular.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -17,7 +17,7 @@
   "commands": {
     "beesly-query-selection": {
       "suggested_key": { "default": "Ctrl+Shift+Y" },
-      "description": "Seçili barkodu Beesly ile sorgula"
+      "description": "SeÃ§ili barkodu Beesly ile sorgula"
     }
   },
   "host_permissions": [
@@ -75,8 +75,9 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Beesly Desk'i Aç",
+    "default_title": "Beesly Desk'i AÃ§",
     "default_icon": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
   },
   "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
 }
+
