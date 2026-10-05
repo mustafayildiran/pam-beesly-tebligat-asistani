@@ -101,3 +101,8 @@ v1.0 — PTT + UETS sorgulama, rozet, sağ-tık/kısayol, eklenti içi giriş, O
 ## Destek
 
 Hata ve öneriler için GitHub **Issues** sekmesini kullanın.
+
+## Lisans
+
+MIT — ayrıntılar için LICENSE dosyasına bakın.
+
