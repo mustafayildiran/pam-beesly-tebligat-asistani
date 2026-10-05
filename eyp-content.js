@@ -155,7 +155,7 @@
           post.formData[k].forEach(function (v) { fd.append(k, v); });
         });
         const r2 = await fetchBuf('replay-multipart', post.url, { method: 'POST', body: fd });
-        if (!r2.isZip) throw new Error('Sunucu ZIP döndürmedi (' + r2.contentType + ') ← ' + String(post.url).slice(0, 160));
+        // ZIP değilse bile aç: ham PDF / düz metin olabilir, görüntüleyici karar verir
         await openBuffer(r2.buffer, name);
         return true;
       }
@@ -163,7 +163,6 @@
         const bytes = new Uint8Array(post.raw[0].bytes);
         const headers = post.contentType ? { 'Content-Type': post.contentType } : {};
         const r = await fetchBuf('replay-raw', post.url, { method: 'POST', headers: headers, body: bytes });
-        if (!r.isZip) throw new Error('Sunucu ZIP döndürmedi (' + r.contentType + ') ← ' + String(post.url).slice(0, 160));
         await openBuffer(r.buffer, name);
         return true;
       }
@@ -171,7 +170,6 @@
       throw new Error('POST gövdesi yakalanamadı, GET denenmedi ← ' + String(post.url).slice(0, 160));
     }
     const r = await fetchBuf('replay-get', info.url, {});
-    if (!r.isZip) throw new Error('Sunucu ZIP döndürmedi (' + r.contentType + ') ← ' + String(info.url).slice(0, 160));
     await openBuffer(r.buffer, name);
     return true;
   }
@@ -251,6 +249,36 @@
       if (now - netCache[i].time <= (maxAgeMs || 60000)) return netCache[i];
     }
     return null;
+  }
+
+  // UYAP tıklama sonrası gerçekte ne istedi? Kaynak zaman çizelgesinden oku.
+  // (fetch/XHR kancasına takılmayan iframe/PDF önizlemeleri burada görünür.)
+  function resourceUrls() {
+    try { return performance.getEntriesByType('resource').map(function (r) { return r.name; }); }
+    catch (e) { return []; }
+  }
+  function isStaticAsset(u) {
+    return /\.(js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map)(\?|#|$)/i.test(u) ||
+      /^data:/i.test(u) || /chrome-extension:/i.test(u) || /fonts\.g(oogleapis|static)\./i.test(u);
+  }
+  function isDocish(u) {
+    return /eyp|evrak|belge|dosya|download|preview|document|show|stream|view|icerik|rapor|karar|tutanak|teblig|files?|attachment/i.test(u);
+  }
+  function loggedUrl(u) {
+    return attemptLog.some(function (r) { return r.url === String(u).slice(0, 300); });
+  }
+  // Metin mi ikili mi? (UYAP .eyp adıyla düz metin de sunabiliyor)
+  function looksLikeText(buffer) {
+    if (!buffer || buffer.byteLength < 16) return false;
+    try {
+      const b = new Uint8Array(buffer.slice(0, 4096));
+      let bad = 0;
+      for (let i = 0; i < b.length; i++) {
+        const c = b[i];
+        if (c === 0 || (c < 9) || (c > 13 && c < 32) || c === 127) bad++;
+      }
+      return bad / b.length < 0.02;
+    } catch (e) { return false; }
   }
 
   /* ---------- overlay / önizleme (değişmedi) ---------- */
@@ -395,6 +423,14 @@
       const f = document.createElement('iframe');
       f.src = pdfUrl;
       previewEl.appendChild(f);
+    } else if (file.buffer && looksLikeText(file.buffer)) {
+      // .eyp adıyla gelen düz metin (örn. gönderi bildirimi): metin olarak göster
+      barEl.appendChild(document.createTextNode(' · metin görünümü'));
+      const pre = document.createElement('pre');
+      try {
+        pre.textContent = new TextDecoder('utf-8').decode(file.buffer.slice(0, 500000)).slice(0, 200000);
+      } catch (e) { pre.textContent = '(metin çözülemedi)'; }
+      previewEl.appendChild(pre);
     } else {
       previewEl.innerHTML = '<div class="eyp-empty">Bu tür (' + (ext || '?').toUpperCase() + ') tarayıcıda önizlenemiyor.<br><br></div>';
       const b = document.createElement('button');
@@ -653,10 +689,40 @@
     armBackground(fileName);
     state.pendingCapture = { fileName: fileName, at: Date.now() };
     toast('Açılıyor… (dosya indirilmeden görüntülenecek)', 3000);
+    // Tıklama sonrası UYAP'ın gerçekte ne istediğini kaynak zaman çizelgesinden
+    // izle; belgeye benzeyen ilk yanıtı alıp doğrudan aç. (Kanca ve indirme
+    // yakalamaya takılmayan iframe/PDF önizlemeleri burada görünür.)
+    const seenRes = new Set(resourceUrls());
+    let observed = 0;
+    const poll = setInterval(function () {
+      if (!state.pendingCapture) { clearInterval(poll); return; }
+      let fresh = [];
+      try {
+        fresh = resourceUrls().filter(function (u) {
+          return !seenRes.has(u) && !isStaticAsset(u) && u.indexOf('blob:') !== 0;
+        });
+        fresh.forEach(function (u) { seenRes.add(u); });
+      } catch (e) { return; }
+      if (!fresh.length) return;
+      observed += fresh.length;
+      // Kendi denemelerimizi tekrar loglama (attemptLog'da varlar)
+      const unlogged = fresh.filter(function (u) { return !loggedUrl(u); });
+      unlogged.forEach(function (u) { elog('uyap-istek', u, 'GET', 0, 0, false); });
+      const cands = fresh.filter(function (u) { return !loggedUrl(u) && isDocish(u); });
+      cands.sort(function (a, b) { return (/\.eyp/i.test(b) ? 1 : 0) - (/\.eyp/i.test(a) ? 1 : 0); });
+      if (!cands.length) return;
+      fetchBuf('gozlem-doc', cands[0], {}).then(function (r) {
+        if (!state.pendingCapture) return;
+        state.pendingCapture = null;
+        clearInterval(poll);
+        return openBuffer(r.buffer, guessName(cands[0]) || fileName);
+      }).catch(function () { /* sonraki tur devam eder */ });
+    }, 800);
+    setTimeout(function () { clearInterval(poll); }, 21000);
     setTimeout(function () {
       if (state.pendingCapture) {
         state.pendingCapture = null;
-        toastAction('Dosya yakalanamadı.', 'Tanıyı kopyala', 12000);
+        toastAction('Dosya yakalanamadı' + (observed ? ' (' + observed + ' istek görüldü).' : '.') + ' ', 'Tanıyı kopyala', 12000);
       }
     }, 20000);
     try {
@@ -702,6 +768,16 @@
     }, true);
   }
 
+  // Aynı satıra ikinci düğme eklenmesini önler (iki tarama turu da buradan geçer)
+  function nearbyButton(el) {
+    let n = el;
+    for (let i = 0; i < 4 && n && n !== document.body; i++) {
+      try { if (n.querySelector && n.querySelector('.eyp-inline-btn')) return true; } catch (e) {}
+      n = n.parentElement;
+    }
+    return false;
+  }
+
   function injectInlineButtons() {
     // Üst menü/navigasyon alanlarına dokunma (sahte "Görüntüle" düğmeleri buradan çıkıyordu)
     function inChrome(el) {
@@ -714,8 +790,8 @@
       } catch (_) { return true; }
     }
     document.querySelectorAll('a[href*=".eyp" i], [download*=".eyp" i], [title*=".eyp" i]').forEach((a) => {
-      if (a.dataset.eypHooked) return;
-      if (inChrome(a) || !visible(a)) return;
+      if (a.dataset.eypHooked || nearbyButton(a)) { a.dataset.eypHooked = '1'; return; }
+      if (inChrome(a) || !visible(a)) { a.dataset.eypHooked = '1'; return; }
       a.dataset.eypHooked = '1';
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -729,7 +805,7 @@
     });
     // Bağlantısız .eyp metin satırları (UYAP tablo hücreleri)
     document.querySelectorAll('td, span, div, li').forEach((el) => {
-      if (el.dataset.eypTextHooked || el.querySelector(':scope > .eyp-inline-btn')) return;
+      if (el.dataset.eypTextHooked || nearbyButton(el)) return;
       if (inChrome(el) || !visible(el)) return;
       const isLeaf = el.childNodes.length === 1 && el.childNodes[0].nodeType === 3;
       if (!isLeaf) return;
@@ -781,8 +857,8 @@
     }
   }
 
-  // Yüzen "EYP Aç" düğmesi kaldırıldı (gereksiz bulunuyor) — dosya seçimi
-  // yalnızca sayfa içi 👁 Görüntüle düğmeleri ve hata diyaloğu üzerinden yapılır.
+  // Yüzen "EYP Aç" düğmesi Beesly'de kapalı — dosya seçimi yalnızca
+  // sayfa içi 👁 Görüntüle düğmeleri ve hata diyaloğu üzerinden yapılır.
 
   function observe() {
     const mo = new MutationObserver(() => {
@@ -802,5 +878,5 @@
   observe();
   injectInlineButtons();
   setInterval(scanErrorDialog, 1500);
-  console.log('[EYP Görüntüleyici] aktif (v1.1.5, MAIN-kanca + indirme-yakalama)');
+  console.log('[EYP Görüntüleyici] aktif (v1.1.6, MAIN-kanca + indirme-yakalama)');
 })();
