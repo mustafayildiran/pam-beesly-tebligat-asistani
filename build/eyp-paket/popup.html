@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<style>
+body { width: 220px; font-family: Arial, sans-serif; padding: 12px; background: #f8f9fa; }
+button { width: 100%; background: #1a365d; color: #fff; border: 0; border-radius: 6px; padding: 8px; font-size: 13px; font-weight: bold; cursor: pointer; }
+button:hover { background: #0056b3; }
+p { font-size: 11px; color: #666; }
+</style>
+</head>
+<body>
+<button id="open">EYP Görüntüleyiciyi Aç</button>
+<p>UYAP'ta .eyp satırlarının yanında 👁 düğmesi belirir.</p>
+<script>document.getElementById('open').onclick=()=>{chrome.tabs.create({url:chrome.runtime.getURL('eyp-viewer.html')});};</script>
+</body>
+</html>

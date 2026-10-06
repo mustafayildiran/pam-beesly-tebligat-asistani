@@ -21,6 +21,9 @@ UYAP Avukat Portal'daki tebligat barkodlarını tek tıkla sorgulayan Chrome ekl
 - **The Office temalı arayüz** (Dunder Mifflin · PTT Şubesi)
 - **EYP görüntüleyici:** UYAP'ta `.eyp` dosyalarını indirmeden önizleme (sayfa içi 👁 Görüntüle düğmeleri + yüzen 📦 EYP Aç paneli)
 
+> EYP modülünü tek başına dağıtmak için: `.\build-eyp-paket.ps1` çalıştırın,
+> `dist/eyp-goruntuleyici-v*.zip` oluşur. Ayrıntı: `build/eyp-paket/README.md`.
+
 ## Nasıl çalışır?
 
 | Kod | Kaynak | Yöntem |
