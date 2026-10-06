@@ -1,6 +1,6 @@
-<img src="icon128.png" width="96" alt="Pam Beesly – Tebligat Asistanı">
+<img src="icon128.png" width="96" alt="Beesly Desk - Tebligat Asistanı">
 
-# Pam Beesly – Tebligat Asistanı
+# Beesly Desk - Tebligat Asistanı
 
 UYAP Avukat Portal'daki tebligat barkodlarını tek tıkla sorgulayan Chrome eklentisi.
 
@@ -103,7 +103,7 @@ Evet. Popup'taki **Bağlan** düğmesi UETS giriş sayfasını açar; e-Devlet/e
 
 ## Sürüm
 
-v1.0 — PTT + UETS sorgulama, rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
+v1.1.3 — PTT + UETS sorgulama, EYP görüntüleyici (+ bağımsız EYP paketi), rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
 
 ## Destek
 
