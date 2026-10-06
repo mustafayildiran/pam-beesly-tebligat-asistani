@@ -577,10 +577,14 @@ async function openUets(barcode) {
 // Seçili barkodu popup kendisi okuyup kartı başa alır.
 chrome.runtime.onInstalled.addListener(() => {
   try {
-    chrome.contextMenus.create({
-      id: "beesly-sorgula",
-      title: "Beesly ile sorgula",
-      contexts: ["selection"]
+    chrome.contextMenus.removeAll(() => {
+      try {
+        chrome.contextMenus.create({
+          id: "beesly-sorgula",
+          title: "Beesly ile sorgula",
+          contexts: ["selection"]
+        });
+      } catch (_) {}
     });
   } catch (_) {}
 });
