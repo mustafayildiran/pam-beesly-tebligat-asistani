@@ -19,10 +19,11 @@ UYAP Avukat Portal'daki tebligat barkodlarını tek tıkla sorgulayan Chrome ekl
 - **Eklenti içi UETS girişi:** kullanıcı kodu + şifre + güvenlik kodu + SMS onayı; e-Devlet/e-İmza için siteye yönlendirme
 - **Temiz çalışma:** sorgu sekmeleri iş bitince otomatik kapanır, UYAP odağı kaybolmaz, barkod tek tıkla panoya kopyalanır
 - **The Office temalı arayüz** (Dunder Mifflin · PTT Şubesi)
-- **EYP görüntüleyici:** UYAP'ta `.eyp` dosyalarını indirmeden önizleme (sayfa içi 👁 Görüntüle düğmeleri + yüzen 📦 EYP Aç paneli)
+- **EYP görüntüleyici:** UYAP'ta `.eyp` dosyalarını indirmeden önizleme (sayfa içi 👁 Görüntüle düğmeleri)
 
-> EYP modülünü tek başına dağıtmak için: `.\build-eyp-paket.ps1` çalıştırın,
-> `dist/eyp-goruntuleyici-v*.zip` oluşur. Ayrıntı: `build/eyp-paket/README.md`.
+> Yalnızca EYP lazımsa: GitHub **Releases** sayfasından `eyp-goruntuleyici-v*.zip`
+> dosyasını indirip zip'ten çıkarın, `chrome://extensions` → Geliştirici modu →
+> Paketlenmemiş öğe yükle. Hepsi bu.
 
 ## Nasıl çalışır?
 

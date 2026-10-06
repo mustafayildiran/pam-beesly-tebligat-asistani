@@ -1,24 +1,16 @@
-# EYP Görüntüleyici (bağımsız paket)
+# EYP Görüntüleyici (tek başına kurulum)
 
-Beesly ile aynı kaynaktan üretilir. Tek başına `chrome://extensions` sayfasından
-geliştirici modunda yüklenebilir.
+Beesly'yi kurmadan, yalnızca EYP okumak için:
 
-## Üretim
+1. GitHub **Releases** sayfasını açın (deponun sağ tarafı).
+2. En üstteki sürümde `eyp-goruntuleyici-v*.zip` dosyasını indirip bir klasöre çıkarın.
+3. Chrome'da `chrome://extensions` → sağ üst **Geliştirici modu** açık olsun.
+4. **Paketlenmemiş öğe yükle** → çıkardığınız klasörü seçin.
+5. UYAP'ta bir `.eyp` dosyasının yanındaki 👁 **Görüntüle** düğmesine basın.
 
-Repo kökünde:
+Hepsi bu — komut satırı, betik, teknik bilgi gerekmez.
 
-```powershell
-.\build-eyp-paket.ps1
-```
+---
 
-Çıktı: `dist/eyp-goruntuleyici-vX.Y.Z.zip` (sürüm, bu klasördeki `manifest.json`dan okunur).
-
-## İçindekiler
-
-Beesly kökündeki `eyp-*` dosyaları birebir kopyalanır (`eyp-background.js` arka plan
-olarak kullanılır); `manifest.json` ve `popup.html` bu klasördeki kalıplardır.
-
-## Sürümleme
-
-Bağımsız paket sürümü (`manifest.json` → `version`) Beesly sürümünden bağımsız
-ilerler. EYP tarafı değişince buradaki sürümü de artırın.
+*Geliştiriciler için: bu paket `build-eyp-paket.ps1` ile Beesly kaynağından
+üretilir (`dist/`). Sürüm numarası `build/eyp-paket/manifest.json` içindedir.*
