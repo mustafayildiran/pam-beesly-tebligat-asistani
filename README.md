@@ -59,17 +59,35 @@ saf `.zip` dosyalarına dokunulmaz, baytlara dokunulmaz.
 
 Bu bölüm özellikle meslektaşlarımız için ayrıntılı yazılmıştır. Özet: **eklenti kişisel veri toplamaz, izlemez, dışarıya veri göndermez.**
 
-### Meslektaşlarımız için açık dille
+### Meslektaşlarımız için: hukuki çerçeve ve teknik doğrulama
 
-Baro disiplin hukuku ve KVKK hassasiyetiyle çalışan bir avukatın bu eklentiyi gönül rahatlığıyla kullanabilmesi için net taahhütler:
+**Hukuki çerçeve.** Avukatlık Kanunu m.36 uyarınca sır saklama yükümlülüğü bu eklentinin
+tasarım ölçütüdür: eklenti, müvekkile ait bilgi ve belgeyi **okumaz, kopyalamaz, iletmez,
+saklamaz**. KVKK m.4'teki ölçülülük ve amaçla sınırlılık ilkeleri gereği her modül yalnızca
+işlevi için zorunlu asgari veriyi ve yalnızca kullanıcının kendi tarayıcısında işler:
 
-- **Müvekkil dosyalarınız okunmuyor.** Sayfa metni yalnızca `4/5/TB` barkod deseni için taranır; dilekçe, delil, kimlik bilgisi kopyalanmaz, saklanmaz, iletilmez.
-- **Şifreniz saklanmıyor.** UETS şifresi giriş anında kullanılır ve bellekten silinir; dosyada, diskte, sunucuda izi kalmaz.
-- **Yabancı sunucuya veri gitmiyor.** İstekler yalnızca PTT, UETS ve UYAP'ın resmi adreslerine yapılır ve yalnızca sorgu için gerekli barkod/oturum bilgisini taşır (tablo aşağıda).
-- **WhatsApp yazışmalarınız okunmuyor.** UDF düzeltici sohbet metnine bakmaz, mesajlarınızı toplamaz; yalnızca indirilen `.udf` dosyasının adındaki fazla `.zip` takısını atar.
-- **Dosyalarınız değiştirilmiyor.** EYP önizlemede dosya indirilmez, UDF indirmede baytlara dokunulmaz — "bozulma" teknik olarak mümkün değildir.
-- **Her şey denetlenebilir.** Kodun tamamı bu depoda açıktır; tarayıcının Geliştirici Araçları → Ağ sekmesinden hangi adrese ne gittiğini kendiniz görebilir, dilediğiniz uzmana inceletebilirsiniz.
-- **İzleme yok.** Analitik, telemetri, reklam, üçüncü taraf çerez yok; eklenti çevrimdışı çalışır, "eve telefon açmaz".
+- Tebligat sorgusu: yalnızca barkod numarası → yalnızca PTT/UETS resmî uçlarına.
+- UETS girişi: kullanıcı kodu + şifre + güvenlik/SMS kodu giriş anında bellekte tutulur,
+  işlem bitince silinir; diske yazılmaz.
+- E-Duruşma / EYP / UDF: sayfa içeriği eklenti dışına çıkarılmaz; EYP'de dosya indirilmez,
+  UDF'de baytlara dokunulmaz; WhatsApp sohbet metni okunmaz.
+
+KVKK terminolojisiyle ifade edersek: eklenti geliştiricisi ne veri sorumlusu ne de veri
+işleyendir — çünkü veri kullanıcının cihazından hiç çıkmaz. Veri toplayan sunucu, analitik
+ve telemetri altyapısı teknik olarak mevcut değildir.
+
+**Teknik doğrulama.** Kodun tamamı bu depoda açıktır; dilediğiniz uzmana inceletebilir
+veya aşağıdaki üç adımla kendiniz doğrulayabilirsiniz:
+
+1. **Ağ trafiği:** Geliştirici Araçları → Ağ sekmesini açıp bir sorgu yapın. İsteklerin
+   yalnızca `api.ptt.gov.tr`, `api.etebligat.gov.tr`, `*.uyap.gov.tr` ve `web.whatsapp.com`
+   adreslerine gittiğini göreceksiniz. Başka adres yoktur.
+2. **İzinler:** `manifest.json` içindeki her iznin karşılığı aşağıdaki tablodadır, fazlası
+   yoktur. MV3 içerik güvenlik politikası gereği eklenti uzaktan kod çalıştıramaz;
+   çalışan kod yalnızca bu paketteki koddur.
+3. **Depolama:** Uygulama → Depolama alanından bakılabilir. Saklananlar yalnızca oturum
+   jetonu, yoklama barkodu, sonuç önbelleği ve panel ayarıdır (kapsam aşağıdaki
+   tabloda); şifre asla saklanmaz, Çıkış ile jeton silinir.
 
 ### Trafik nereye gidiyor?
 
