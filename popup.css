@@ -176,4 +176,5 @@ body {
 /* Sekmeler kaldırıldı (0.13.6) */
 .hint { font-size: 11px; color: #a0aec0; text-align: center; margin-top: 8px; }
 .hint i { color: #718096; }
+.fam { font-size: 10px; color: #cbd5e0; text-align: center; margin-top: 4px; }
 #uetsVerifyInfo { font-size: 12px; margin-bottom: 6px; color: #4a5568; font-style: italic; }

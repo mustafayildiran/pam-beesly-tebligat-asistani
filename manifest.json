@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Beesly Desk - Tebligat Asistanı",
-  "version": "1.1.4",
-  "description": "Tebligat barkodlarını tek tıkla sorgulayan UYAP asistanı: PTT, UETS, EYP",
+  "name": "Beesly Desk - UYAP Asistanı",
+  "version": "1.3.0",
+  "description": "UYAP asistanı: Tebligat sorgulama (PTT, UETS), E-Duruşma takip penceresi, EYP görüntüleyici, WhatsApp UDF düzeltici",
   "permissions": [
     "activeTab",
     "scripting",
@@ -26,7 +26,8 @@
     "https://www.ptt.gov.tr/*",
     "https://api.ptt.gov.tr/*",
     "https://ptt.etebligat.gov.tr/*",
-    "https://api.etebligat.gov.tr/*"
+    "https://api.etebligat.gov.tr/*",
+    "https://web.whatsapp.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -45,6 +46,17 @@
     {
       "matches": ["*://*.uyap.gov.tr/*", "*://uyap.gov.tr/*"],
       "js": ["content-uyap.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://avukat.uyap.gov.tr/*"],
+      "js": ["content-durusma.js"],
+      "css": ["edurusma.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content-whatsapp-udf.js"],
       "run_at": "document_idle"
     },
     {

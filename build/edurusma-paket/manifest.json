@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "E-Duruşma Yardımcısı",
+  "version": "0.3.0",
+  "description": "Duruşma takip penceresi + UYAP EYP görüntüleyici (indirmeden açma).",
+  "permissions": ["storage", "downloads", "webRequest"],
+  "host_permissions": [
+    "https://avukat.uyap.gov.tr/*",
+    "https://*.uyap.gov.tr/*",
+    "https://uyap.gov.tr/*"
+  ],
+  "background": {
+    "service_worker": "eyp-background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://avukat.uyap.gov.tr/*"],
+      "js": ["content-durusma.js"],
+      "css": ["edurusma.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://avukat.uyap.gov.tr/*", "https://*.uyap.gov.tr/*", "https://uyap.gov.tr/*"],
+      "js": ["eyp-inject.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": true
+    },
+    {
+      "matches": ["https://avukat.uyap.gov.tr/*", "https://*.uyap.gov.tr/*", "https://uyap.gov.tr/*"],
+      "js": ["eyp-jszip.min.js", "eyp-parser.js", "eyp-content.js"],
+      "css": ["eyp-viewer.css"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["eyp-jszip.min.js", "eyp-parser.js", "eyp-viewer.js", "eyp-viewer.html"],
+      "matches": ["https://avukat.uyap.gov.tr/*", "https://*.uyap.gov.tr/*", "https://uyap.gov.tr/*"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "E-Duruşma Yardımcısı"
+  }
+}

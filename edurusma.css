@@ -1,0 +1,112 @@
+/* E-Duruşma Yardımcısı - küçük buton + sade gömülü pencere */
+#edurusma-open-btn {
+  position: fixed !important;
+  right: 14px !important;
+  bottom: 14px !important;
+  z-index: 2147483646 !important;
+  padding: 7px 12px !important;
+  border-radius: 18px !important;
+  border: 1px solid rgba(255,255,255,.4) !important;
+  background: linear-gradient(135deg,#1a56db,#0e3aa8) !important;
+  color: #fff !important;
+  font: 600 12px/1.2 system-ui, sans-serif !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 14px rgba(26,86,219,.45) !important;
+  white-space: nowrap !important;
+}
+#edurusma-open-btn:hover { filter: brightness(1.1) !important; }
+
+#edurusma-takip-panel {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #fff !important;
+  border: 1px solid #dbe3f0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 48px rgba(10,30,80,.35) !important;
+  overflow: hidden !important;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif !important;
+}
+#edurusma-takip-panel.ed-hidden { display: none !important; }
+#edurusma-takip-panel:not(.ed-hidden) {
+  animation: edPop .18s ease-out !important;
+  transform-origin: bottom right !important;
+}
+@keyframes edPop {
+  from { opacity: 0 !important; transform: scale(.92) translateY(10px) !important; }
+  to { opacity: 1 !important; transform: none !important; }
+}
+#edurusma-takip-panel.ed-mini #edurusma-takip-body,
+#edurusma-takip-panel.ed-mini #edurusma-takip-status { display: none !important; }
+
+#edurusma-takip-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 7px 8px !important;
+  background: linear-gradient(135deg,#1a56db,#0e3aa8) !important;
+  color: #fff !important;
+  cursor: move !important;
+  user-select: none !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+#edurusma-takip-header .ed-title { flex: 1 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+#edurusma-takip-header select {
+  font-size: 11px !important;
+  border-radius: 6px !important;
+  border: none !important;
+  padding: 2px 4px !important;
+  color: #111 !important;
+  max-width: 86px !important;
+}
+#edurusma-takip-header button {
+  border: 1px solid rgba(255,255,255,.35) !important;
+  border-radius: 6px !important;
+  padding: 2px 7px !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  background: rgba(255,255,255,.16) !important;
+  color: #fff !important;
+  white-space: nowrap !important;
+}
+#edurusma-takip-header button:hover { background: rgba(255,255,255,.32) !important; }
+
+#edurusma-takip-body { flex: 1 !important; min-height: 0 !important; background: #eef2f7 !important; position: relative !important; overflow-y: auto !important; }
+#edurusma-takip-body iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  background: #fff !important;
+}
+#edurusma-takip-status {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  color: #64748b !important;
+  background: #f8fafc !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+#edurusma-takip-status .ed-sizes button {
+  border: 1px solid #cbd5e1 !important;
+  background: #fff !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  padding: 1px 7px !important;
+  cursor: pointer !important;
+  color: #334155 !important;
+}
+#edurusma-takip-status .ed-sizes button.ed-active { background: #1a56db !important; color: #fff !important; border-color: #1a56db !important; }
+#edurusma-takip-resize {
+  position: absolute !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  cursor: nwse-resize !important;
+  background: linear-gradient(135deg, transparent 50%, #94a3b8 50%) !important;
+}

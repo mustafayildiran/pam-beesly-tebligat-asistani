@@ -853,3 +853,5 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 // EYP arka plan bloğu ayrı dosyadadır (tek kaynak: eyp-background.js)
 try { importScripts('eyp-background.js'); } catch (e) { console.warn(e); }
+// WhatsApp UDF düzeltici bloğu ayrı dosyadadır (tek kaynak: wa-udf-background.js)
+try { importScripts('wa-udf-background.js'); } catch (e) { console.warn(e); }

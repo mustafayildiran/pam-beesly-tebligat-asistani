@@ -449,9 +449,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (_) {}
     const tabUrl = (activeTab?.url || activeTab?.pendingUrl || '').toLowerCase();
 
-    // Kapsam: yalnızca UYAP. Başka sekmede Jim uyarısı çıkar.
+    // Kapsam: barkod taraması yalnızca UYAP'ta; WhatsApp sekmesinde UDF kartı gösterilir.
     const isUyap = !!tabUrl.includes('uyap');
-    if (!activeTab || !isUyap) {
+    const isWhatsapp = !!tabUrl.includes('web.whatsapp.com');
+    if (!activeTab || (!isUyap && !isWhatsapp)) {
       let host = '';
       try { host = new URL(activeTab?.url || '').hostname; } catch (_) {}
       container.innerHTML = '';
@@ -472,6 +473,23 @@ document.addEventListener('DOMContentLoaded', () => {
         warn.appendChild(h);
       }
       container.appendChild(warn);
+      return;
+    }
+
+    // WhatsApp sekmesi: barkod taraması yok, üstte minik rozet
+    if (isWhatsapp && !isUyap) {
+      container.innerHTML = '';
+      const badgeWrap = document.createElement('div');
+      badgeWrap.style.cssText = 'text-align:center;margin:4px 0';
+      const badge = document.createElement('span');
+      badge.className = 'badge badge-ptt';
+      badge.textContent = 'WhatsApp UDF aktif ✓';
+      const sub = document.createElement('div');
+      sub.className = 'ux-sub';
+      sub.style.cssText = 'margin-top:4px';
+      sub.textContent = ".udf aynen iner, .zip'e dokunulmaz";
+      badgeWrap.append(badge, sub);
+      container.appendChild(badgeWrap);
       return;
     }
 

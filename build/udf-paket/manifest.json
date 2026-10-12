@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "WhatsApp UDF Düzeltici",
+  "version": "1.0.0",
+  "description": "WhatsApp Web'den gelen .udf dosyalarını .zip yerine orijinal .udf adıyla indirir. Baytlara dokunmaz.",
+  "permissions": ["downloads"],
+  "host_permissions": [
+    "https://web.whatsapp.com/*"
+  ],
+  "background": {
+    "service_worker": "wa-udf-background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["content-whatsapp-udf.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "WhatsApp UDF Düzeltici"
+  }
+}

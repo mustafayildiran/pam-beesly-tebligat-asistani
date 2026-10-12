@@ -12,5 +12,11 @@ Hepsi bu — komut satırı, betik, teknik bilgi gerekmez.
 
 ---
 
+*Bu eklenti **Beesly Desk** ailesindendir (Tebligat Asistanı · EYP Görüntüleyici ·
+E-Duruşma Yardımcısı · WhatsApp UDF Düzeltici). Tüm eklentiler için
+[Releases sayfasına](https://github.com/mustafayildiran/pam-beesly-tebligat-asistani/releases) bakın.*
+
+---
+
 *Geliştiriciler için: bu paket `build-eyp-paket.ps1` ile Beesly kaynağından
 üretilir (`dist/`). Sürüm numarası `build/eyp-paket/manifest.json` içindedir.*
