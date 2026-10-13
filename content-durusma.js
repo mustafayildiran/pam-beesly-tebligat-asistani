@@ -9,7 +9,9 @@
   window.__EDURUSMA_LOADED__ = true;
 
   const TAKIP_URL = 'https://avukat.uyap.gov.tr/durusma-takip';
-  const isSorgulama = () => /durusma-sorgu/i.test(location.href + ' ' + document.title);
+  // Panel hem sorgulama hem takip sayfasında açılır: mahkeme seçimi sorgulamada,
+  // liste takipte görünür; şerit ikisini de okur.
+  const isSorgulama = () => /durusma-sorgu|durusma-takip/i.test(location.href + ' ' + document.title);
   const LS_KEY = 'edurusma_panel_v5';
 
   const state = { w: 340, h: 420, top: null, bottom: 70, left: null, right: 14, autoMs: 30000, open: false, mini: false };
