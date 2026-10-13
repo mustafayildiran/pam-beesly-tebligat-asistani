@@ -139,6 +139,27 @@
       .replace('İcra Hukuk Mahkemesi', 'İcra Hukuk')
       .replace(' Mahkemesi', '').replace(' Hakimliği', '').trim();
   }
+  // Tarama önbelleği: tablo sanal kaydırmalıysa DOM'da anlık görünen satırlar
+  // eksik olur. Görünen her satır anahtarıyla birikir; panel tam listeyi
+  // kaydırdıkça tamamlanır. Yenile düğmesi önbelleği sıfırlar.
+  const rowCache = new Map();
+  function rowKey(r) { return `${r.dosya} | ${r.tarih}`; }
+  function parseTarih(t) {
+    const m = String(t || '').match(/(\d{2})\.(\d{2})\.(\d{4})\s+(\d{1,2}):(\d{2})/);
+    return m ? new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5]).getTime() : null;
+  }
+  function cachedRows() {
+    const arr = Array.from(rowCache.values());
+    arr.forEach((r, k) => { r._k = k; });
+    arr.sort((a, b) => {
+      const ta = parseTarih(a.tarih), tb = parseTarih(b.tarih);
+      if (ta != null && tb != null) return ta - tb;
+      if (ta != null) return -1;
+      if (tb != null) return 1;
+      return a._k - b._k;
+    });
+    return arr.map((r, i) => ({ i, tarih: r.tarih, mahkeme: r.mahkeme, dosya: r.dosya, aciklama: r.aciklama }));
+  }
   // Sayfadaki tüm ızgaraları topla (liste iç içe bir çerçevede de olabilir)
   function docGrids(doc, depth) {
     const out = [];
@@ -218,6 +239,25 @@
     if (/görüntüle/i.test(txt) && /mahkeme/i.test(txt)) return { status: 'select', gridCount: 0 };
     return { status: 'unknown', gridCount: 0 };
   }
+  // Dosya no + saat ile satır öğesini bul (sanal kaydırmada indeks kayar, metin sabit)
+  function findRowEl(dosya, saat) {
+    const docs = [document];
+    try {
+      const f = iframe && (iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document));
+      if (f) docs.push(f);
+    } catch (e) {}
+    for (const dc of docs) {
+      if (!dc || !dc.querySelectorAll) continue;
+      const trs = dc.querySelectorAll('.dx-data-row');
+      for (let k = 0; k < trs.length; k++) {
+        const tr = trs[k];
+        if (!tr.cells || !tr.cells.length) continue;
+        const txt = Array.from(tr.cells).map(td => td.innerText || '').join(' ');
+        if (dosya && txt.indexOf(dosya) !== -1 && (!saat || txt.indexOf(saat) !== -1)) return tr;
+      }
+    }
+    return null;
+  }
   function updateBugun() {
     if (!bugunBar || !state.open || state.mini) return;
     try { trimTakipGrid(); } catch (e) {}
@@ -233,7 +273,8 @@
       return;
     }
     if (data.status !== 'grid') { bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Liste okunamadı')); return; }
-    const rows = data.rows;
+    data.rows.forEach(rr => { if (rr.tarih) { try { rowCache.set(rowKey(rr), rr); } catch (e) {} } });
+    const rows = cachedRows();
     // Tarih hücresi "13.10.2026 09:00" biçimindedir; günü kapsama ile eşleştir
     const todays = rows.filter(r => (r.tarih || '').indexOf(t) !== -1);
     if (!todays.length) {
@@ -261,9 +302,14 @@
         `${i === nextIdx ? '◉ ' : ''}${i + 1}) ${saat} · ${r.dosya} · ${durum}`);
       b.addEventListener('click', () => {
         try {
-          r.el.scrollIntoView({ block: 'center' });
-          r.el.style.outline = '2px solid #1a56db';
-          setTimeout(() => { try { r.el.style.outline = ''; } catch (e) {} }, 2500);
+          const m = (r.tarih.match(/(\d{1,2}):(\d{2})/) || []);
+          const st = m.length ? (String(m[1]).padStart(2, '0') + ':' + m[2]) : '';
+          const hit = findRowEl(r.dosya, st);
+          if (hit) {
+            hit.scrollIntoView({ block: 'center' });
+            hit.style.outline = '2px solid #1a56db';
+            setTimeout(() => { try { hit.style.outline = ''; } catch (e) {} }, 2500);
+          }
         } catch (e) {}
       });
       list.appendChild(b);
@@ -278,7 +324,7 @@
     let doc;
     try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return; }
     if (!doc || !doc.querySelector) return;
-    const KEEP = [/^mahkeme/i, /dosya no/i, /duruşma tarihi/i, /açıklama/i];
+    const KEEP = [/^mahkeme/i, /^birim/i, /dosya no/i, /duruşma tarihi/i, /açıklama/i, /sonuç|sonuc/i];
     doc.querySelectorAll('.dx-datagrid').forEach(grid => {
       const hCells = Array.from(grid.querySelectorAll('.dx-header-row td'));
       if (!hCells.length) return;
@@ -504,7 +550,7 @@
   function startRouteWatcher() {
     let last = location.href;
     setInterval(() => {
-      if (location.href !== last) { last = location.href; ensureUI(); }
+      if (location.href !== last) { last = location.href; try { rowCache.clear(); } catch (e) {} ensureUI(); }
       else if (!uiBuilt) ensureUI();
     }, 800);
     window.addEventListener('hashchange', ensureUI);
@@ -545,11 +591,9 @@
         (async () => {
           try {
             const g = gridRowsFromDoc(document);
-            if (g && g.rows && g.rows.length) {
-              const rows = g.rows.map((r, i) => ({ i, tarih: r.tarih, mahkeme: r.mahkeme, dosya: r.dosya, aciklama: r.aciklama, via: 'sayfa' }));
-              sendResponse({ ok: true, url: location.href, rows });
-              return;
-            }
+            if (g && g.rows) g.rows.forEach(r => { if (r.tarih) rowCache.set(rowKey(r), r); });
+            const rows = cachedRows();
+            if (rows.length) { sendResponse({ ok: true, url: location.href, rows }); return; }
             // Yedek: yüzen panelin çerçevesi (aynı kaynak, okunabilir)
             let fdoc = null;
             try {
@@ -558,33 +602,22 @@
             } catch (e) {}
             if (fdoc) {
               const g2 = gridRowsFromDoc(fdoc);
-              const rows = (g2 && g2.rows ? g2.rows : []).map((r, i) => ({ i, tarih: r.tarih, mahkeme: r.mahkeme, dosya: r.dosya, aciklama: r.aciklama, via: 'panel' }));
-              sendResponse({ ok: true, url: location.href, rows });
-              return;
+              (g2 && g2.rows ? g2.rows : []).forEach(r => { if (r.tarih) rowCache.set(rowKey(r), r); });
             }
-            sendResponse({ ok: true, url: location.href, rows: [] });
+            sendResponse({ ok: true, url: location.href, rows: cachedRows() });
           } catch (e) { sendResponse({ ok: false }); }
         })();
+        return true;
+      }
+      if (msg && msg.type === 'EDURUSMA_CLEAR_CACHE') {
+        try { rowCache.clear(); } catch (e) {}
+        sendResponse({ ok: true });
         return true;
       }
       if (msg && msg.type === 'EDURUSMA_GOTO') {
         // Dosya no + saat ile satırı bul (sanal kaydırmada indeksler kayar, metin sabittir)
         try {
-          const ds = String(msg.dosya || ''), st = String(msg.saat || '');
-          const docs = [document];
-          try {
-            const f = iframe && (iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document));
-            if (f) docs.push(f);
-          } catch (e) {}
-          let hit = null;
-          for (const dc of docs) {
-            if (hit || !dc || !dc.querySelectorAll) continue;
-            dc.querySelectorAll('.dx-data-row').forEach(tr => {
-              if (hit || !tr.cells || !tr.cells.length) return;
-              const txt = Array.from(tr.cells).map(td => td.innerText || '').join(' ');
-              if (ds && txt.indexOf(ds) !== -1 && (!st || txt.indexOf(st) !== -1)) hit = tr;
-            });
-          }
+          const hit = findRowEl(String(msg.dosya || ''), String(msg.saat || ''));
           if (hit) {
             hit.scrollIntoView({ block: 'center' });
             hit.style.outline = '2px solid #1a56db';

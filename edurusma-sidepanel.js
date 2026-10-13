@@ -5,9 +5,8 @@
   const AUTO_KEY = 'edurusma_side_auto';
   const statusEl = document.getElementById('sp-status');
   const todayBox = document.getElementById('sp-today');
+  const allBox = document.getElementById('sp-all');
   const autoSel = document.getElementById('sp-auto');
-  const frame = document.getElementById('sp-frame');
-  const TAKIP_URL = 'https://avukat.uyap.gov.tr/durusma-takip';
   let timer = null;
   let lastTabId = null;
 
@@ -69,6 +68,7 @@
 
   function render(rows) {
     todayBox.innerHTML = '';
+    allBox.innerHTML = '';
     const t = todayStr();
     const todays = rows.filter(r => (r.tarih || '').indexOf(t) !== -1);
     const head = document.createElement('div');
@@ -93,11 +93,19 @@
       });
       todayBox.appendChild(list);
     }
-    // Tam liste alttaki canlı çerçevede; burada yalnız bugün özeti durur.
+    if (rows.length) {
+      const list = document.createElement('div');
+      list.className = 'sp-list';
+      rows.forEach((r) => {
+        list.appendChild(itemEl(r, `${r.tarih} · ${r.dosya}`, '', `${shortMahkeme(r.mahkeme)} · ${shortDurum(r.aciklama)}`));
+      });
+      allBox.appendChild(list);
+    }
   }
 
   function hint(msg) {
     todayBox.innerHTML = '';
+    allBox.innerHTML = '';
     const e = document.createElement('div');
     e.className = 'sp-empty';
     e.textContent = msg;
@@ -143,9 +151,16 @@
     if (ms > 0) timer = setInterval(() => load(true), ms);
   }
 
-  document.getElementById('sp-refresh').addEventListener('click', () => load(false));
-  document.getElementById('sp-framerefresh').addEventListener('click', () => {
-    try { frame.src = TAKIP_URL; setStatus('Takip sayfası yenileniyor...'); } catch (_) {}
+  document.getElementById('sp-refresh').addEventListener('click', async () => {
+    // Yenile = sıfırdan tara (önbelleği temizle, güncel listeyi oku)
+    try {
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      const tab = tabs && tabs[0];
+      if (tab && tab.id) {
+        try { await chrome.tabs.sendMessage(tab.id, { type: 'EDURUSMA_CLEAR_CACHE' }); } catch (_) {}
+      }
+    } catch (_) {}
+    load(false);
   });
   autoSel.addEventListener('change', () => { restartAuto(); setStatus('Otomatik: ' + (autoSel.value === '0' ? 'kapalı' : (autoSel.value / 1000) + ' sn')); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });
