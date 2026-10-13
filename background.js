@@ -696,7 +696,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     } else if (msg?.type === "BEESLY_QUERY_DONE") {      setBadge(!!msg.ok);
       // Site girişi kanıtı: 5xx sorgusu yedek sekmede BAŞARILI olduysa ve eklenti
       // jetonu yoksa, başarı site oturumundan gelmiş demektir. Rozet bunu hatırlar
-      // (12 saat geçerli bayrak; jeton/şifre saklanmaz, yalnızca "çalıştı" bilgisi).
+      // (2 saat geçerli bayrak; jeton/şifre saklanmaz, yalnızca "çalıştı" bilgisi).
       try {
         if (msg.ok && /^5/.test(String(msg.barcode || ""))) {
           const sess = await sessGet("beeslyUetsToken");
@@ -727,7 +727,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ ok: true });
     } else if (msg?.type === "BEESLY_UETS_STATUS") {
       // Tek doğruluk kaynağı: önce eklenti oturum jetonu, yoksa site girişi bayrağı.
-      // (Site bayrağı yalnızca başarılı sorguyla konur, 12 saat geçerlidir.)
+      // Bayrak "şu an bağlı" demek DEĞİL, "son sorgu siteyle çalıştı" demektir (2 saat).
       const sess = await sessGet("beeslyUetsToken");
       if (sess?.beeslyUetsToken?.access_token) {
         sendResponse({
@@ -736,7 +736,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       } else {
         let site = null;
         try { site = (await chrome.storage.local.get("beeslyUetsSite"))?.beeslyUetsSite; } catch (_) {}
-        if (site?.connected && site.at && Date.now() - site.at < 12 * 60 * 60 * 1000) {
+        if (site?.connected && site.at && Date.now() - site.at < 2 * 60 * 60 * 1000) {
           sendResponse({ status: { connected: true, at: site.at, via: "site" } });
         } else {
           sendResponse({ status: { connected: false, at: 0 } });

@@ -106,7 +106,7 @@ veya aşağıdaki üç adımla kendiniz doğrulayabilirsiniz:
 | Veri | Nerede | Süre / amaç |
 |---|---|---|
 | UETS oturum jetonu | Tarayıcı oturum deposu (+ yeniden başlatmaya dayanıklı yedek) | Sorgular için; Çıkış ile silinir |
-| UETS site girişi bayrağı | Cihaz içi önbellek | Sitede yapılan girişle sorgu başarılı olunca konur (12 saat geçerli); yalnızca "çalıştı" bilgisi, jeton/şifre içermez |
+| UETS site girişi bayrağı | Cihaz içi önbellek | Sitede yapılan girişle sorgu başarılı olunca konur (2 saat geçerli); yalnızca "çalıştı" bilgisi, jeton/şifre içermez |
 | Yoklama barkodu | Cihaz içi önbellek | İlk kurulumda bir kez sorulur; "Bağlı mıyım?" kontrolünde normal UETS sorgusu olarak kullanılır |
 | Son sorgu sonuçları | Cihaz içi önbellek | Popup'ta hızlı gösterim için |
 | Rozet/bağlantı bayrakları | Cihaz içi önbellek | Arayüz durumu için |
@@ -153,7 +153,7 @@ Sonuç kutusundaki `İz:` satırı hangi adımın takıldığını söyler. UETS
 Evet. Giriş formundaki **e-Devlet ile giriş (sitede)** düğmesi UETS giriş sayfasını açar;
 e-Devlet/e-İmza/Mobil İmza ile sitede giriş yapın, sonra popup'tan Sorgula'ya basın.
 Rozet ilk başta "giriş gerekli" göstermeye devam eder; ilk başarılı sorgudan sonra
-**bağlı ✓ · site girişi** olur (12 saat geçerli; uzantı şifrenizi görmez ve saklamaz).
+**site ile çalıştı · X önce** olur (2 saat geçerli; uzantı şifrenizi görmez ve saklamaz).
 
 **WhatsApp'tan inen .udf dosyası bozuk mu çıkıyor?**
 Hayır. Eklenti dosya içeriğine dokunmaz, yalnızca indirme anında dosya adını düzeltir (`.zip` dayatmasını kaldırır).

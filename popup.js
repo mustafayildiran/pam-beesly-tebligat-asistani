@@ -70,7 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } catch (_) {}
         const viaSite = resp?.status?.via === 'site';
-        uetsStatus.textContent = '● UETS: bağlı ✓' + (viaSite ? ' · site girişi' : '') + ageTxt;
+        if (viaSite) {
+          // Dürüst ifade: anlık bağlantı değil, son başarılı sorgunun kanıtı
+          uetsStatus.textContent = '● UETS: site ile çalıştı' + (ageTxt ? ageTxt + ' önce' : '');
+        } else {
+          uetsStatus.textContent = '● UETS: bağlı ✓' + ageTxt;
+        }
         uetsStatus.className = 'dot on';
         // Bağlıyken giriş düğmesi gizlenir, rozet + kontrol kalır
         uetsFormBtn.style.display = 'none';
