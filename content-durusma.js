@@ -161,25 +161,40 @@
     if (!doc || !doc.querySelector) return null;
     const grids = docGrids(doc, 0);
     for (const grid of grids) {
-      const h = Array.from(grid.querySelectorAll('.dx-header-row td')).map(td => (td.innerText || '').trim());
-      const it = h.findIndex(x => /duruşma tarihi/i.test(x));
+      // DİKKAT: veri satırlarının ilk hücresi içinde sahte iç-içe <tr> var;
+      // querySelectorAll('td') recursive toplayıp sütunları kaydırır.
+      // tr.cells yalnız DOĞRUDAN hücreleri verir.
+      const hRow = grid.querySelector('.dx-header-row');
+      const hCells = Array.from((hRow && hRow.cells) || grid.querySelectorAll('.dx-header-row td'))
+        .map(td => (td.innerText || '').trim());
+      const it = hCells.findIndex(x => /duruşma tarihi/i.test(x));
       if (it < 0) continue;
-      const iMah = h.findIndex(x => /^mahkeme/i.test(x));
-      const iDosya = h.findIndex(x => /dosya no/i.test(x));
+      const iMah = hCells.findIndex(x => /^mahkeme/i.test(x));
+      const iDosya = hCells.findIndex(x => /dosya no/i.test(x));
+      const iAcik = hCells.findIndex(x => /açıklama/i.test(x));
       const rows = [];
       grid.querySelectorAll('.dx-data-row').forEach(tr => {
-        const cells = Array.from(tr.querySelectorAll('td')).map(td => (td.innerText || '').trim());
+        if (tr.cells === undefined || tr.cells.length < hCells.length - 1) return;
+        const cells = Array.from(tr.cells).map(td => (td.innerText || '').trim());
         if (!cells.some(c => c)) return; // boş ara satır
         rows.push({
           el: tr,
           tarih: cells[it] || '',
           mahkeme: iMah >= 0 ? (cells[iMah] || '') : '',
-          dosya: iDosya >= 0 ? (cells[iDosya] || '') : ''
+          dosya: iDosya >= 0 ? (cells[iDosya] || '') : '',
+          aciklama: iAcik >= 0 ? (cells[iAcik] || '') : ''
         });
       });
       return { rows, gridCount: grids.length };
     }
     return null;
+  }
+  // "Duruşma Devam Ediyor" -> "Devam Ediyor", "Duruşma Yapıldı" -> "Yapıldı"
+  function shortDurum(s) {
+    const t = String(s || '').trim();
+    if (/yapıldı/i.test(t)) return 'Yapıldı';
+    if (/devam/i.test(t)) return 'Devam Ediyor';
+    return t.slice(0, 24);
   }
   function readTakipRows() {
     // 1) Önce ana sayfa: mahkeme seçimi + Görüntüle genelde burada yapılır
@@ -238,9 +253,10 @@
     const list = el('div', { class: 'ed-bugun-list' });
     todays.forEach((r, i) => {
       const saat = mins[i] != null ? `${pad(Math.floor(mins[i] / 60))}:${pad(mins[i] % 60)}` : '??:??';
+      const durum = shortDurum(r.aciklama);
       const cls = 'ed-bugun-item' + (i === nextIdx ? ' ed-next' : '') + (mins[i] != null && mins[i] < nowMin ? ' ed-past' : '');
-      const b = el('button', { type: 'button', class: cls, title: `${r.mahkeme} ${r.dosya} ${r.tarih} (listede göster)` },
-        `${i === nextIdx ? '◉ ' : ''}${i + 1}) ${saat} · ${r.dosya} · ${shortMahkeme(r.mahkeme)}`);
+      const b = el('button', { type: 'button', class: cls, title: `${r.mahkeme} ${r.dosya} ${r.tarih} · ${r.aciklama}` },
+        `${i === nextIdx ? '◉ ' : ''}${i + 1}) ${saat} · ${r.dosya} · ${durum}`);
       b.addEventListener('click', () => {
         try {
           r.el.scrollIntoView({ block: 'center' });
@@ -521,7 +537,7 @@
         (async () => {
           try {
             const g = gridRowsFromDoc(document);
-            const rows = (g && g.rows ? g.rows : []).map((r, i) => ({ i, tarih: r.tarih, mahkeme: r.mahkeme, dosya: r.dosya }));
+            const rows = (g && g.rows ? g.rows : []).map((r, i) => ({ i, tarih: r.tarih, mahkeme: r.mahkeme, dosya: r.dosya, aciklama: r.aciklama }));
             sendResponse({ ok: true, url: location.href, rows });
           } catch (e) { sendResponse({ ok: false }); }
         })();

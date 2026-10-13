@@ -29,6 +29,12 @@
     const m = String(tarih || '').match(/(\d{1,2}):(\d{2})/) || [];
     return m.length ? (+m[1]) * 60 + (+m[2]) : null;
   }
+  function shortDurum(s) {
+    const t = String(s || '').trim();
+    if (/yapıldı/i.test(t)) return 'Yapıldı';
+    if (/devam/i.test(t)) return 'Devam Ediyor';
+    return t.slice(0, 24);
+  }
   function fmtSaat(mins) {
     if (mins == null) return '??:??';
     return String(Math.floor(mins / 60)).padStart(2, '0') + ':' + String(mins % 60).padStart(2, '0');
@@ -79,7 +85,7 @@
       list.className = 'sp-list';
       todays.forEach((r, i) => {
         const cls = (i === nextIdx ? 'ed-next' : '') + (mins[i] != null && mins[i] < nowMin ? ' ed-past' : '');
-        list.appendChild(itemEl(r, `${i === nextIdx ? '◉ ' : ''}${i + 1}) ${fmtSaat(mins[i])} · ${r.dosya}`, cls.trim(), shortMahkeme(r.mahkeme)));
+        list.appendChild(itemEl(r, `${i === nextIdx ? '◉ ' : ''}${i + 1}) ${fmtSaat(mins[i])} · ${r.dosya}`, cls.trim(), `${shortMahkeme(r.mahkeme)} · ${shortDurum(r.aciklama)}`));
       });
       todayBox.appendChild(list);
     }
@@ -87,7 +93,7 @@
       const list = document.createElement('div');
       list.className = 'sp-list';
       rows.forEach((r) => {
-        list.appendChild(itemEl(r, `${r.tarih} · ${r.dosya}`, '', shortMahkeme(r.mahkeme)));
+        list.appendChild(itemEl(r, `${r.tarih} · ${r.dosya}`, '', `${shortMahkeme(r.mahkeme)} · ${shortDurum(r.aciklama)}`));
       });
       allBox.appendChild(list);
     }
