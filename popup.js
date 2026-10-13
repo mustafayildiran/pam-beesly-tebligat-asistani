@@ -69,7 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (m > 0) ageTxt = ' · ' + m + 'dk';
           }
         } catch (_) {}
-        uetsStatus.textContent = '● UETS: bağlı ✓' + ageTxt;
+        const viaSite = resp?.status?.via === 'site';
+        uetsStatus.textContent = '● UETS: bağlı ✓' + (viaSite ? ' · site girişi' : '') + ageTxt;
         uetsStatus.className = 'dot on';
         // Bağlıyken giriş düğmesi gizlenir, rozet + kontrol kalır
         uetsFormBtn.style.display = 'none';

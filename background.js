@@ -663,6 +663,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       } catch (_) {}
       sendResponse({ ok: true });
     } else if (msg?.type === "BEESLY_QUERY_DONE") {      setBadge(!!msg.ok);
+      // Site girişi kanıtı: 5xx sorgusu yedek sekmede BAŞARILI olduysa ve eklenti
+      // jetonu yoksa, başarı site oturumundan gelmiş demektir. Rozet bunu hatırlar
+      // (12 saat geçerli bayrak; jeton/şifre saklanmaz, yalnızca "çalıştı" bilgisi).
+      try {
+        if (msg.ok && /^5/.test(String(msg.barcode || ""))) {
+          const sess = await sessGet("beeslyUetsToken");
+          if (!sess?.beeslyUetsToken?.access_token) {
+            await chrome.storage.local.set({ beeslyUetsSite: { connected: true, at: Date.now() } });
+          }
+        }
+      } catch (_) {}
       try {
         const dbgKey = "beeslyDebug_" + msg.barcode;
         const cur = await chrome.storage.local.get(dbgKey);
@@ -684,14 +695,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       pttWarmUp();
       sendResponse({ ok: true });
     } else if (msg?.type === "BEESLY_UETS_STATUS") {
-      // Tek doğruluk kaynağı: eklenti oturum jetonu (sayfa bayrakları bayatlayabiliyor)
+      // Tek doğruluk kaynağı: önce eklenti oturum jetonu, yoksa site girişi bayrağı.
+      // (Site bayrağı yalnızca başarılı sorguyla konur, 12 saat geçerlidir.)
       const sess = await sessGet("beeslyUetsToken");
-      const ok = !!sess?.beeslyUetsToken?.access_token;
-      sendResponse({
-        status: ok
-          ? { connected: true, at: sess.beeslyUetsToken.at || 0, via: "form" }
-          : { connected: false, at: 0 }
-      });
+      if (sess?.beeslyUetsToken?.access_token) {
+        sendResponse({
+          status: { connected: true, at: sess.beeslyUetsToken.at || 0, via: "form" }
+        });
+      } else {
+        let site = null;
+        try { site = (await chrome.storage.local.get("beeslyUetsSite"))?.beeslyUetsSite; } catch (_) {}
+        if (site?.connected && site.at && Date.now() - site.at < 12 * 60 * 60 * 1000) {
+          sendResponse({ status: { connected: true, at: site.at, via: "site" } });
+        } else {
+          sendResponse({ status: { connected: false, at: 0 } });
+        }
+      }
     } else if (msg?.type === "BEESLY_UETS_TOKEN") {
       const sess = await sessGet("beeslyUetsToken");
       sendResponse({ token: sess?.beeslyUetsToken?.access_token || null });
@@ -827,6 +846,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     } else if (msg?.type === "BEESLY_UETS_LOGOUT") {
       await sessRemove("beeslyUetsToken");
       await sessRemove("beeslyUetsProfile");
+      try { await chrome.storage.local.remove("beeslyUetsSite"); } catch (_) {}
       await chrome.storage.local.set({ beeslyUets: { connected: false, at: Date.now() } });
       sendResponse({ ok: true });
     } else if (msg?.type === "BEESLY_UETS_PROFILE") {
