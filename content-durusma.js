@@ -3,7 +3,7 @@
 // Sekme değişimi yok -> e-duruşma bağlantısı açık kalır. Sade görünüm hep açık.
 (function () {
   'use strict';
-  const ED_VER = '0.2.1';
+  const ED_VER = '0.3.0';
   if (window.__EDURUSMA_V__ === ED_VER) return;
   window.__EDURUSMA_V__ = ED_VER;
   window.__EDURUSMA_LOADED__ = true;
@@ -50,7 +50,7 @@
     return n;
   }
 
-  let panel, iframe, statusTxt, timer = null, fitTimer = null, openBtn, pendingScroll = null;
+  let panel, iframe, statusTxt, timer = null, fitTimer = null, openBtn, pendingScroll = null, bugunBar = null, bugunTimer = null;
 
   function fmtTime(d) { return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
   function setStatus(msg) { if (statusTxt) statusTxt.textContent = msg; }
@@ -90,10 +90,92 @@
   function restartTimer() {
     if (timer) { clearInterval(timer); timer = null; }
     if (fitTimer) { clearInterval(fitTimer); fitTimer = null; }
+    if (bugunTimer) { clearInterval(bugunTimer); bugunTimer = null; }
     if (state.open && !state.mini) {
       fitTimer = setInterval(fitIframe, 4000);
+      bugunTimer = setInterval(updateBugun, 20000);
       if (state.autoMs > 0) timer = setInterval(refreshIframe, state.autoMs);
     }
+  }
+
+  // ---- Bugünkü duruşmalar şeridi ----
+  // iframe ile aynı kaynaktan okunur: Duruşma Tarihi sütununda bugünün
+  // tarihiyle başlayan satırlar saat + sıra numarasıyla listelenir.
+  // Sıradaki (saati gelmemiş ilk) duruşma işaretlenir; tıklayınca
+  // listede o satıra kaydırılır.
+  function todayStrTR() {
+    const d = new Date(), p = (n) => String(n).padStart(2, '0');
+    return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
+  }
+  function shortMahkeme(s) {
+    return String(s || '')
+      .replace('Ağır Ceza Mahkemesi', 'ACM')
+      .replace('Asliye Ceza Mahkemesi', 'Asliye Ceza')
+      .replace('Asliye Hukuk Mahkemesi', 'Asliye Hukuk')
+      .replace('Sulh Ceza Hakimliği', 'SCH')
+      .replace('Sulh Hukuk Mahkemesi', 'Sulh Hukuk')
+      .replace('İcra Hukuk Mahkemesi', 'İcra Hukuk')
+      .replace(' Mahkemesi', '').replace(' Hakimliği', '').trim();
+  }
+  function readTakipRows() {
+    let doc;
+    try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return null; }
+    if (!doc || !doc.querySelector) return null;
+    const grid = doc.querySelector('.dx-datagrid');
+    if (!grid) return null;
+    const headers = Array.from(grid.querySelectorAll('.dx-header-row td')).map(td => (td.innerText || '').trim());
+    const idx = (re) => headers.findIndex(h => re.test(h));
+    const iTarih = idx(/duruşma tarihi/i), iMah = idx(/^mahkeme/i), iDosya = idx(/dosya no/i);
+    const rows = [];
+    grid.querySelectorAll('.dx-data-row').forEach(tr => {
+      const cells = Array.from(tr.querySelectorAll('td')).map(td => (td.innerText || '').trim());
+      if (!cells.some(c => c)) return; // boş ara satır
+      rows.push({
+        el: tr,
+        tarih: iTarih >= 0 ? (cells[iTarih] || '') : '',
+        mahkeme: iMah >= 0 ? (cells[iMah] || '') : '',
+        dosya: iDosya >= 0 ? (cells[iDosya] || '') : ''
+      });
+    });
+    return rows;
+  }
+  function updateBugun() {
+    if (!bugunBar || !state.open || state.mini) return;
+    bugunBar.innerHTML = '';
+    let rows = null;
+    try { rows = readTakipRows(); } catch (e) { rows = null; }
+    const t = todayStrTR();
+    const head = el('div', { class: 'ed-bugun-head' }, `Bugün · ${t}`);
+    bugunBar.appendChild(head);
+    if (!rows) { bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Liste okunamadı')); return; }
+    const todays = rows.filter(r => r.tarih.indexOf(t) === 0);
+    if (!todays.length) { bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Bugün duruşma yok')); return; }
+    head.textContent = `Bugün (${todays.length}) · ${t}`;
+    const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+    const minsOf = (r) => {
+      const m = r.tarih.match(/(\d{1,2}):(\d{2})/) || [];
+      return m.length ? (+m[1]) * 60 + (+m[2]) : null;
+    };
+    const mins = todays.map(minsOf);
+    let nextIdx = -1;
+    mins.forEach((m, i) => { if (m != null && m >= nowMin && nextIdx < 0) nextIdx = i; });
+    const pad = (n) => String(n).padStart(2, '0');
+    const list = el('div', { class: 'ed-bugun-list' });
+    todays.forEach((r, i) => {
+      const saat = mins[i] != null ? `${pad(Math.floor(mins[i] / 60))}:${pad(mins[i] % 60)}` : '??:??';
+      const cls = 'ed-bugun-item' + (i === nextIdx ? ' ed-next' : '') + (mins[i] != null && mins[i] < nowMin ? ' ed-past' : '');
+      const b = el('button', { type: 'button', class: cls, title: `${r.mahkeme} ${r.dosya} ${r.tarih} (listede göster)` },
+        `${i === nextIdx ? '◉ ' : ''}${i + 1}) ${saat} · ${r.dosya} · ${shortMahkeme(r.mahkeme)}`);
+      b.addEventListener('click', () => {
+        try {
+          r.el.scrollIntoView({ block: 'center' });
+          r.el.style.outline = '2px solid #1a56db';
+          setTimeout(() => { try { r.el.style.outline = ''; } catch (e) {} }, 2500);
+        } catch (e) {}
+      });
+      list.appendChild(b);
+    });
+    bugunBar.appendChild(list);
   }
 
   // Sade görünüm + tam kaydırma: üst menüler gizlenir, iç kaydırma alanları
@@ -148,7 +230,7 @@
     state.open = force != null ? force : panel.classList.contains('ed-hidden');
     panel.classList.toggle('ed-hidden', !state.open);
     saveState(); restartTimer();
-    if (state.open) { setTimeout(fitIframe, 500); setTimeout(fitIframe, 2000); }
+    if (state.open) { setTimeout(fitIframe, 500); setTimeout(fitIframe, 2000); setTimeout(updateBugun, 800); }
   }
 
   function buildPanel() {
@@ -176,6 +258,8 @@
     panel.appendChild(header);
 
     const body = el('div', { id: 'edurusma-takip-body' });
+    bugunBar = el('div', { id: 'edurusma-bugun' });
+    body.appendChild(bugunBar);
     iframe = el('iframe', { src: TAKIP_URL, title: 'Duruşma Takip' });
     iframe.setAttribute('scrolling', 'yes');
     iframe.addEventListener('load', () => {
@@ -185,6 +269,8 @@
       fitIframe();
       setTimeout(fitIframe, 1500);
       setTimeout(fitIframe, 3500);
+      setTimeout(updateBugun, 1500);
+      setTimeout(updateBugun, 3500);
       if (pendingScroll) {
         const p = pendingScroll; pendingScroll = null;
         try { iframe.contentWindow.scrollTo(p.x, p.y); } catch (e) {}

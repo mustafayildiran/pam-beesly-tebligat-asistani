@@ -74,6 +74,14 @@
 #edurusma-takip-header button:hover { background: rgba(255,255,255,.32) !important; }
 
 #edurusma-takip-body { flex: 1 !important; min-height: 0 !important; background: #eef2f7 !important; position: relative !important; overflow-y: auto !important; }
+#edurusma-bugun { background: #fff !important; border-bottom: 1px solid #dbe3f0 !important; padding: 6px 8px !important; font-size: 11px !important; }
+#edurusma-bugun .ed-bugun-head { font-weight: 700 !important; color: #1a56db !important; margin-bottom: 4px !important; }
+#edurusma-bugun .ed-bugun-empty { color: #94a3b8 !important; }
+#edurusma-bugun .ed-bugun-list { display: flex !important; flex-direction: column !important; gap: 3px !important; }
+#edurusma-bugun .ed-bugun-item { text-align: left !important; border: 1px solid #cbd5e1 !important; background: #f8fafc !important; border-radius: 6px !important; padding: 3px 6px !important; font-size: 11px !important; cursor: pointer !important; color: #1e293b !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+#edurusma-bugun .ed-bugun-item:hover { background: #e8eefb !important; }
+#edurusma-bugun .ed-bugun-item.ed-next { border-color: #16a34a !important; background: #f0fdf4 !important; font-weight: 700 !important; }
+#edurusma-bugun .ed-bugun-item.ed-past { opacity: .55 !important; }
 #edurusma-takip-body iframe {
   width: 100% !important;
   height: 100% !important;
