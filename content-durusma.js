@@ -137,13 +137,29 @@
       .replace('İcra Hukuk Mahkemesi', 'İcra Hukuk')
       .replace(' Mahkemesi', '').replace(' Hakimliği', '').trim();
   }
+  // Sayfadaki tüm ızgaraları topla (liste iç içe bir çerçevede de olabilir)
+  function docGrids(doc, depth) {
+    const out = [];
+    try {
+      doc.querySelectorAll('.dx-datagrid').forEach(g => out.push(g));
+      if ((depth || 0) < 2) {
+        doc.querySelectorAll('iframe').forEach(f => {
+          try {
+            const dd = f.contentDocument || (f.contentWindow && f.contentWindow.document);
+            if (dd) docGrids(dd, (depth || 0) + 1).forEach(g => out.push(g));
+          } catch (e) {}
+        });
+      }
+    } catch (e) {}
+    return out;
+  }
   function readTakipRows() {
     let doc;
-    try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return { status: 'unknown' }; }
-    if (!doc || !doc.querySelector) return { status: 'unknown' };
+    try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return { status: 'unknown', gridCount: 0 }; }
+    if (!doc || !doc.querySelector) return { status: 'unknown', gridCount: 0 };
     // Sayfada birden fazla tablo olabilir (mahkeme seçim listesi ayrı ızgaradır):
     // "Duruşma Tarihi" başlığını taşıyan ızgarayı bul.
-    const grids = Array.from(doc.querySelectorAll('.dx-datagrid'));
+    const grids = docGrids(doc, 0);
     let grid = null, headers = [], iTarih = -1, iMah = -1, iDosya = -1;
     for (const g of grids) {
       const h = Array.from(g.querySelectorAll('.dx-header-row td')).map(td => (td.innerText || '').trim());
@@ -159,8 +175,8 @@
       // Henüz liste yok: mahkeme seçim ekranı mı?
       let txt = '';
       try { txt = (doc.body && doc.body.innerText) || ''; } catch (e) {}
-      if (/görüntüle/i.test(txt) && /mahkeme/i.test(txt)) return { status: 'select' };
-      return { status: 'unknown' };
+      if (/görüntüle/i.test(txt) && /mahkeme/i.test(txt)) return { status: 'select', gridCount: grids.length };
+      return { status: 'unknown', gridCount: grids.length };
     }
     const rows = [];
     grid.querySelectorAll('.dx-data-row').forEach(tr => {
@@ -173,7 +189,7 @@
         dosya: iDosya >= 0 ? (cells[iDosya] || '') : ''
       });
     });
-    return { status: 'grid', rows };
+    return { status: 'grid', rows, gridCount: grids.length };
   }
   function updateBugun() {
     if (!bugunBar || !state.open || state.mini) return;
@@ -182,6 +198,7 @@
     try { data = readTakipRows() || data; } catch (e) {}
     const t = todayStrTR();
     const head = el('div', { class: 'ed-bugun-head' }, `Bugün · ${t}`);
+    try { head.title = `teşhis: ızgara=${data.gridCount || 0}, durum=${data.status}`; } catch (e) {}
     bugunBar.appendChild(head);
     if (data.status === 'select') {
       bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Önce listeden mahkemeyi seçip Görüntüle’ye basın'));
