@@ -20,7 +20,7 @@ UYAP Avukat Portal için genel asistan: tebligat barkodlarını tek tıkla sorgu
 - **Temiz çalışma:** sorgu sekmeleri iş bitince otomatik kapanır, UYAP odağı kaybolmaz, barkod tek tıkla panoya kopyalanır
 - **The Office temalı arayüz** (Dunder Mifflin · UYAP Şubesi)
 - **EYP görüntüleyici:** UYAP'ta `.eyp` dosyalarını indirmeden önizleme (sayfa içi 👁 Görüntüle düğmeleri)
-- **E-Duruşma takip penceresi:** duruşma-sorgulama sayfasında sağ altta ◎ Takip butonu; `/durusma-takip` listesini sürüklenebilir, yeniden boyutlandırılabilir küçük panelde açar (otomatik yenileme: kapalı / 15 sn / 30 sn / 60 sn / 2 dk). Sekme değişmediği için e-duruşma bağlantısı açık kalır. Panel üstündeki **Bugün** şeridi günün duruşmalarını saat + sıra numarasıyla listeler, sıradakini işaretler; tıklayınca listede o satıra kaydırır.
+- **E-Duruşma takip penceresi:** duruşma-sorgulama sayfasında sağ altta ◎ Takip butonu; `/durusma-takip` listesini sürüklenebilir, yeniden boyutlandırılabilir küçük panelde açar (otomatik yenileme: kapalı / 15 sn / 30 sn / 60 sn / 2 dk). Sekme değişmediği için e-duruşma bağlantısı açık kalır. Panel üstündeki **Bugün** şeridi günün duruşmalarını saat + sıra numarasıyla listeler, sıradakini işaretler; tıklayınca listede o satıra kaydırır. (Önce panel içinden mahkemeyi seçip Görüntüle'ye basın; şerit listeyi otomatik yakalar.)
 - **WhatsApp UDF düzeltici:** WhatsApp Web'de `.udf` dosyasının `.udf.zip` olarak inmesini engeller
 (`.udf` aynen bırakılır, `.udf.zip` ise `.udf` yapılır). Dosya adı asla baştan yazılmaz,
 saf `.zip` dosyalarına dokunulmaz, baytlara dokunulmaz.
@@ -162,7 +162,7 @@ dosyanın WinRAR ile açılmaya çalışılmasıdır.
 
 ## Sürüm
 
-v1.3.1 — PTT + UETS sorgulama, E-Duruşma takip penceresi + Bugün şeridi (+ bağımsız E-Duruşma paketi), EYP görüntüleyici (+ bağımsız EYP paketi), WhatsApp UDF düzeltici (+ bağımsız UDF paketi), rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
+v1.3.2 — PTT + UETS sorgulama, E-Duruşma takip penceresi + Bugün şeridi (+ bağımsız E-Duruşma paketi), EYP görüntüleyici (+ bağımsız EYP paketi), WhatsApp UDF düzeltici (+ bağımsız UDF paketi), rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
 
 ## Destek
 

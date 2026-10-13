@@ -50,7 +50,7 @@
     return n;
   }
 
-  let panel, iframe, statusTxt, timer = null, fitTimer = null, openBtn, pendingScroll = null, bugunBar = null, bugunTimer = null;
+  let panel, iframe, statusTxt, timer = null, fitTimer = null, openBtn, pendingScroll = null, bugunBar = null, bugunTimer = null, takipObserver = null, bugunDeb = null;
 
   function fmtTime(d) { return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
   function setStatus(msg) { if (statusTxt) statusTxt.textContent = msg; }
@@ -95,7 +95,27 @@
       fitTimer = setInterval(fitIframe, 4000);
       bugunTimer = setInterval(updateBugun, 20000);
       if (state.autoMs > 0) timer = setInterval(refreshIframe, state.autoMs);
+    } else {
+      try { if (takipObserver) { takipObserver.disconnect(); takipObserver = null; } } catch (e) {}
     }
+  }
+
+  // Takip sayfası önce mahkeme seçim ekranı gösterir; Görüntüle'ye basılınca
+  // liste AJAX ile gelir (iframe yeniden yüklenmez). Belgeyi izleyip
+  // ızgara belirince/değişince şeridi güncelle.
+  function scheduleBugun() {
+    if (bugunDeb) clearTimeout(bugunDeb);
+    bugunDeb = setTimeout(updateBugun, 800);
+  }
+  function watchTakipDoc() {
+    try { if (takipObserver) { takipObserver.disconnect(); takipObserver = null; } } catch (e) {}
+    let doc;
+    try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return; }
+    if (!doc || !doc.documentElement) return;
+    try {
+      takipObserver = new MutationObserver(scheduleBugun);
+      takipObserver.observe(doc.documentElement, { childList: true, subtree: true });
+    } catch (e) {}
   }
 
   // ---- Bugünkü duruşmalar şeridi ----
@@ -119,10 +139,16 @@
   }
   function readTakipRows() {
     let doc;
-    try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return null; }
-    if (!doc || !doc.querySelector) return null;
+    try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return { status: 'unknown' }; }
+    if (!doc || !doc.querySelector) return { status: 'unknown' };
     const grid = doc.querySelector('.dx-datagrid');
-    if (!grid) return null;
+    if (!grid) {
+      // Henüz liste yok: mahkeme seçim ekranı mı?
+      let txt = '';
+      try { txt = (doc.body && doc.body.innerText) || ''; } catch (e) {}
+      if (/görüntüle/i.test(txt) && /mahkeme/i.test(txt)) return { status: 'select' };
+      return { status: 'unknown' };
+    }
     const headers = Array.from(grid.querySelectorAll('.dx-header-row td')).map(td => (td.innerText || '').trim());
     const idx = (re) => headers.findIndex(h => re.test(h));
     const iTarih = idx(/duruşma tarihi/i), iMah = idx(/^mahkeme/i), iDosya = idx(/dosya no/i);
@@ -137,17 +163,22 @@
         dosya: iDosya >= 0 ? (cells[iDosya] || '') : ''
       });
     });
-    return rows;
+    return { status: 'grid', rows };
   }
   function updateBugun() {
     if (!bugunBar || !state.open || state.mini) return;
     bugunBar.innerHTML = '';
-    let rows = null;
-    try { rows = readTakipRows(); } catch (e) { rows = null; }
+    let data = { status: 'unknown' };
+    try { data = readTakipRows() || data; } catch (e) {}
     const t = todayStrTR();
     const head = el('div', { class: 'ed-bugun-head' }, `Bugün · ${t}`);
     bugunBar.appendChild(head);
-    if (!rows) { bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Liste okunamadı')); return; }
+    if (data.status === 'select') {
+      bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Önce listeden mahkemeyi seçip Görüntüle’ye basın'));
+      return;
+    }
+    if (data.status !== 'grid') { bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Liste okunamadı')); return; }
+    const rows = data.rows;
     const todays = rows.filter(r => r.tarih.indexOf(t) === 0);
     if (!todays.length) { bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Bugün duruşma yok')); return; }
     head.textContent = `Bugün (${todays.length}) · ${t}`;
@@ -267,6 +298,7 @@
       applySlim();
       unfitIframe();
       fitIframe();
+      watchTakipDoc();
       setTimeout(fitIframe, 1500);
       setTimeout(fitIframe, 3500);
       setTimeout(updateBugun, 1500);
