@@ -162,7 +162,7 @@ dosyanın WinRAR ile açılmaya çalışılmasıdır.
 
 ## Sürüm
 
-v1.3.2 — PTT + UETS sorgulama, E-Duruşma takip penceresi + Bugün şeridi (+ bağımsız E-Duruşma paketi), EYP görüntüleyici (+ bağımsız EYP paketi), WhatsApp UDF düzeltici (+ bağımsız UDF paketi), rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
+v1.3.3 — PTT + UETS sorgulama, E-Duruşma takip penceresi + Bugün şeridi (+ bağımsız E-Duruşma paketi), EYP görüntüleyici (+ bağımsız EYP paketi), WhatsApp UDF düzeltici (+ bağımsız UDF paketi), rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
 
 ## Destek
 

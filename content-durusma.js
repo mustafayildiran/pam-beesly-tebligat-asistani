@@ -141,7 +141,20 @@
     let doc;
     try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return { status: 'unknown' }; }
     if (!doc || !doc.querySelector) return { status: 'unknown' };
-    const grid = doc.querySelector('.dx-datagrid');
+    // Sayfada birden fazla tablo olabilir (mahkeme seçim listesi ayrı ızgaradır):
+    // "Duruşma Tarihi" başlığını taşıyan ızgarayı bul.
+    const grids = Array.from(doc.querySelectorAll('.dx-datagrid'));
+    let grid = null, headers = [], iTarih = -1, iMah = -1, iDosya = -1;
+    for (const g of grids) {
+      const h = Array.from(g.querySelectorAll('.dx-header-row td')).map(td => (td.innerText || '').trim());
+      const it = h.findIndex(x => /duruşma tarihi/i.test(x));
+      if (it >= 0) {
+        grid = g; headers = h; iTarih = it;
+        iMah = h.findIndex(x => /^mahkeme/i.test(x));
+        iDosya = h.findIndex(x => /dosya no/i.test(x));
+        break;
+      }
+    }
     if (!grid) {
       // Henüz liste yok: mahkeme seçim ekranı mı?
       let txt = '';
@@ -149,9 +162,6 @@
       if (/görüntüle/i.test(txt) && /mahkeme/i.test(txt)) return { status: 'select' };
       return { status: 'unknown' };
     }
-    const headers = Array.from(grid.querySelectorAll('.dx-header-row td')).map(td => (td.innerText || '').trim());
-    const idx = (re) => headers.findIndex(h => re.test(h));
-    const iTarih = idx(/duruşma tarihi/i), iMah = idx(/^mahkeme/i), iDosya = idx(/dosya no/i);
     const rows = [];
     grid.querySelectorAll('.dx-data-row').forEach(tr => {
       const cells = Array.from(tr.querySelectorAll('td')).map(td => (td.innerText || '').trim());
@@ -179,8 +189,14 @@
     }
     if (data.status !== 'grid') { bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Liste okunamadı')); return; }
     const rows = data.rows;
-    const todays = rows.filter(r => r.tarih.indexOf(t) === 0);
-    if (!todays.length) { bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Bugün duruşma yok')); return; }
+    // Tarih hücresi "13.10.2026 09:00" biçimindedir; günü kapsama ile eşleştir
+    const todays = rows.filter(r => (r.tarih || '').indexOf(t) !== -1);
+    if (!todays.length) {
+      const info = el('div', { class: 'ed-bugun-empty' }, `Bugün duruşma yok · listede ${rows.length} satır`);
+      info.title = rows.length ? ('İlk satır: ' + rows[0].tarih) : 'Satır okunamadı';
+      bugunBar.appendChild(info);
+      return;
+    }
     head.textContent = `Bugün (${todays.length}) · ${t}`;
     const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
     const minsOf = (r) => {

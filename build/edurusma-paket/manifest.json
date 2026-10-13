@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "E-Duruşma Yardımcısı",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Duruşma takip penceresi + UYAP EYP görüntüleyici (indirmeden açma).",
   "permissions": ["storage", "downloads", "webRequest"],
   "host_permissions": [
