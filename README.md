@@ -165,7 +165,7 @@ dosyanın WinRAR ile açılmaya çalışılmasıdır.
 
 ## Sürüm
 
-v1.4.1 — PTT + UETS sorgulama, E-Duruşma yan panel (canlı takip + zum) + Bugün şeridi (+ bağımsız E-Duruşma paketi), EYP görüntüleyici (+ bağımsız EYP paketi), WhatsApp UDF düzeltici (+ bağımsız UDF paketi), rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
+v1.4.2 — PTT + UETS sorgulama (canlı Kontrol Et, dürüst site rozeti), E-Duruşma yan panel (canlı takip + zum) + Bugün şeridi (+ bağımsız E-Duruşma paketi), EYP görüntüleyici (+ bağımsız EYP paketi), WhatsApp UDF düzeltici (+ bağımsız UDF paketi), rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
 
 ## Destek
 

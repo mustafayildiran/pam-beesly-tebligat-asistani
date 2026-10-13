@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Beesly Desk - UYAP Asistanı",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "UYAP asistanı: Tebligat sorgulama (PTT, UETS), E-Duruşma takip penceresi, EYP görüntüleyici, WhatsApp UDF düzeltici",
   "permissions": [
     "activeTab",
