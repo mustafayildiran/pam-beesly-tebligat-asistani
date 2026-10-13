@@ -203,6 +203,7 @@
   }
   function updateBugun() {
     if (!bugunBar || !state.open || state.mini) return;
+    try { trimTakipGrid(); } catch (e) {}
     bugunBar.innerHTML = '';
     let data = { status: 'unknown' };
     try { data = readTakipRows() || data; } catch (e) {}
@@ -252,6 +253,35 @@
     bugunBar.appendChild(list);
   }
 
+  // Paneldeki ızgarayı sığdır: yalnızca Mahkeme / Dosya No / Duruşma Tarihi /
+  // Açıklama sütunları görünür, gerisi gizlenir. Başlık adına göre gizlenir
+  // (sıra kayması olmaz); veri satırlarındaki fazladan ön hücreler dengelenir.
+  function trimTakipGrid() {
+    let doc;
+    try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return; }
+    if (!doc || !doc.querySelector) return;
+    const KEEP = [/^mahkeme/i, /dosya no/i, /duruşma tarihi/i, /açıklama/i];
+    doc.querySelectorAll('.dx-datagrid').forEach(grid => {
+      const hCells = Array.from(grid.querySelectorAll('.dx-header-row td'));
+      if (!hCells.length) return;
+      const hideH = [];
+      hCells.forEach((td, i) => {
+        const t = (td.innerText || '').trim();
+        if (!KEEP.some(re => re.test(t))) hideH.push(i);
+      });
+      if (!hideH.length || hideH.length >= hCells.length) return;
+      hCells.forEach((td, i) => { if (hideH.indexOf(i) !== -1) td.style.display = 'none'; });
+      grid.querySelectorAll('.dx-data-row').forEach(tr => {
+        const cells = tr.querySelectorAll('td');
+        const off = cells.length - hCells.length; // fazladan ön hücreler (açılır sütun vb.)
+        hideH.forEach(i => {
+          const c = cells[i + off];
+          if (c) c.style.display = 'none';
+        });
+      });
+    });
+  }
+
   // Sade görünüm + tam kaydırma: üst menüler gizlenir, iç kaydırma alanları
   // etkisizleştirilir; böylece liste tek parça uzar, kaydırma panelde olur.
   function applySlim() {
@@ -267,6 +297,8 @@
       st.textContent = 'header,nav,.navbar,.topbar,app-header,app-topbar,app-sidebar,.sidebar,.layout-topbar,.layout-sidebar{display:none!important}'
         + 'body{margin:0!important}html,body{height:auto!important;min-height:0!important;overflow:visible!important}'
         + '.content,.layout-main{margin:0!important;padding:8px!important;height:auto!important;min-height:0!important;overflow:visible!important}'
+        + '.dx-datagrid{font-size:11px!important}'
+        + '.dx-datagrid .dx-row > td{padding:3px 4px!important;white-space:normal!important;word-break:break-word!important}'
         + '.dx-scrollable-container,.dx-scrollable-content{overflow:visible!important;height:auto!important;max-height:none!important}'
         + '.dx-datagrid-rowsview{max-height:none!important}'
         + 'html,body{scrollbar-width:none!important}::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}';
@@ -346,6 +378,9 @@
       setTimeout(fitIframe, 3500);
       setTimeout(updateBugun, 1500);
       setTimeout(updateBugun, 3500);
+      try { trimTakipGrid(); } catch (e) {}
+      setTimeout(() => { try { trimTakipGrid(); } catch (e) {} }, 1500);
+      setTimeout(() => { try { trimTakipGrid(); } catch (e) {} }, 3500);
       if (pendingScroll) {
         const p = pendingScroll; pendingScroll = null;
         try { iframe.contentWindow.scrollTo(p.x, p.y); } catch (e) {}
