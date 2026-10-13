@@ -153,43 +153,51 @@
     } catch (e) {}
     return out;
   }
-  function readTakipRows() {
-    let doc;
-    try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return { status: 'unknown', gridCount: 0 }; }
-    if (!doc || !doc.querySelector) return { status: 'unknown', gridCount: 0 };
-    // Sayfada birden fazla tablo olabilir (mahkeme seçim listesi ayrı ızgaradır):
-    // "Duruşma Tarihi" başlığını taşıyan ızgarayı bul.
+  // Belgedeki tüm ızgaralar arasından "Duruşma Tarihi" başlıklı olanı bulur.
+  // (Mahkeme seçim listesi ayrı ızgaradır; başlığa bakmadan ilk tablo alınmaz.)
+  function gridRowsFromDoc(doc) {
+    if (!doc || !doc.querySelector) return null;
     const grids = docGrids(doc, 0);
-    let grid = null, headers = [], iTarih = -1, iMah = -1, iDosya = -1;
-    for (const g of grids) {
-      const h = Array.from(g.querySelectorAll('.dx-header-row td')).map(td => (td.innerText || '').trim());
+    for (const grid of grids) {
+      const h = Array.from(grid.querySelectorAll('.dx-header-row td')).map(td => (td.innerText || '').trim());
       const it = h.findIndex(x => /duruşma tarihi/i.test(x));
-      if (it >= 0) {
-        grid = g; headers = h; iTarih = it;
-        iMah = h.findIndex(x => /^mahkeme/i.test(x));
-        iDosya = h.findIndex(x => /dosya no/i.test(x));
-        break;
-      }
-    }
-    if (!grid) {
-      // Henüz liste yok: mahkeme seçim ekranı mı?
-      let txt = '';
-      try { txt = (doc.body && doc.body.innerText) || ''; } catch (e) {}
-      if (/görüntüle/i.test(txt) && /mahkeme/i.test(txt)) return { status: 'select', gridCount: grids.length };
-      return { status: 'unknown', gridCount: grids.length };
-    }
-    const rows = [];
-    grid.querySelectorAll('.dx-data-row').forEach(tr => {
-      const cells = Array.from(tr.querySelectorAll('td')).map(td => (td.innerText || '').trim());
-      if (!cells.some(c => c)) return; // boş ara satır
-      rows.push({
-        el: tr,
-        tarih: iTarih >= 0 ? (cells[iTarih] || '') : '',
-        mahkeme: iMah >= 0 ? (cells[iMah] || '') : '',
-        dosya: iDosya >= 0 ? (cells[iDosya] || '') : ''
+      if (it < 0) continue;
+      const iMah = h.findIndex(x => /^mahkeme/i.test(x));
+      const iDosya = h.findIndex(x => /dosya no/i.test(x));
+      const rows = [];
+      grid.querySelectorAll('.dx-data-row').forEach(tr => {
+        const cells = Array.from(tr.querySelectorAll('td')).map(td => (td.innerText || '').trim());
+        if (!cells.some(c => c)) return; // boş ara satır
+        rows.push({
+          el: tr,
+          tarih: cells[it] || '',
+          mahkeme: iMah >= 0 ? (cells[iMah] || '') : '',
+          dosya: iDosya >= 0 ? (cells[iDosya] || '') : ''
+        });
       });
-    });
-    return { status: 'grid', rows, gridCount: grids.length };
+      return { rows, gridCount: grids.length };
+    }
+    return null;
+  }
+  function readTakipRows() {
+    // 1) Önce ana sayfa: mahkeme seçimi + Görüntüle genelde burada yapılır
+    try {
+      const main = gridRowsFromDoc(document);
+      if (main) return { status: 'grid', rows: main.rows, gridCount: main.gridCount, src: 'sayfa' };
+    } catch (e) {}
+    // 2) Panel çerçevesi (iç içe çerçeveler dahil)
+    let doc = null;
+    try { doc = iframe.contentDocument || iframe.contentWindow.document; } catch (e) { return { status: 'unknown', gridCount: 0 }; }
+    if (!doc) return { status: 'unknown', gridCount: 0 };
+    try {
+      const inner = gridRowsFromDoc(doc);
+      if (inner) return { status: 'grid', rows: inner.rows, gridCount: inner.gridCount, src: 'panel' };
+    } catch (e) {}
+    // 3) Henüz liste yok: mahkeme seçim ekranı mı?
+    let txt = '';
+    try { txt = ((document.body && document.body.innerText) || '') + ' ' + ((doc.body && doc.body.innerText) || ''); } catch (e) {}
+    if (/görüntüle/i.test(txt) && /mahkeme/i.test(txt)) return { status: 'select', gridCount: 0 };
+    return { status: 'unknown', gridCount: 0 };
   }
   function updateBugun() {
     if (!bugunBar || !state.open || state.mini) return;
@@ -198,10 +206,10 @@
     try { data = readTakipRows() || data; } catch (e) {}
     const t = todayStrTR();
     const head = el('div', { class: 'ed-bugun-head' }, `Bugün · ${t}`);
-    try { head.title = `teşhis: ızgara=${data.gridCount || 0}, durum=${data.status}`; } catch (e) {}
+    try { head.title = `teşhis: ızgara=${data.gridCount || 0}, durum=${data.status}, kaynak=${data.src || '-'}`; } catch (e) {}
     bugunBar.appendChild(head);
     if (data.status === 'select') {
-      bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Önce listeden mahkemeyi seçip Görüntüle’ye basın'));
+      bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Önce mahkemeyi seçip Görüntüle’ye basın'));
       return;
     }
     if (data.status !== 'grid') { bugunBar.appendChild(el('div', { class: 'ed-bugun-empty' }, 'Liste okunamadı')); return; }
@@ -466,6 +474,19 @@
     console.info('[EDurusma] init', location.href);
     startRouteWatcher();
     ensureUI();
+    // Ana sayfadaki liste değişince şeridi güncelle (panelin kendi
+    // değişiklikleri sayılmaz; yoksa kısır döngü olur).
+    try {
+      const mo = new MutationObserver((muts) => {
+        for (const m of muts) {
+          const t = m.target;
+          if (t && t.nodeType === 1 && t.closest && t.closest('#edurusma-takip-panel, #edurusma-open-btn')) continue;
+          scheduleBugun();
+          return;
+        }
+      });
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+    } catch (e) {}
     window.addEventListener('load', ensureUI);
     setTimeout(ensureUI, 2500);
   })();
