@@ -169,9 +169,11 @@
         .map(td => (td.innerText || '').trim());
       const it = hCells.findIndex(x => /duruşma tarihi/i.test(x));
       if (it < 0) continue;
-      const iMah = hCells.findIndex(x => /^mahkeme/i.test(x));
+      let iMah = hCells.findIndex(x => /mahkeme/i.test(x));
+      if (iMah < 0) iMah = hCells.findIndex(x => /^birim/i.test(x));
       const iDosya = hCells.findIndex(x => /dosya no/i.test(x));
-      const iAcik = hCells.findIndex(x => /açıklama/i.test(x));
+      let iAcik = hCells.findIndex(x => /açıklama/i.test(x));
+      if (iAcik < 0) iAcik = hCells.findIndex(x => /sonuç|sonuc/i.test(x));
       const rows = [];
       grid.querySelectorAll('.dx-data-row').forEach(tr => {
         if (tr.cells === undefined || tr.cells.length < hCells.length - 1) return;
@@ -535,28 +537,58 @@
   window.__EDURUSMA__ = { version: ED_VER, state, scrape: scrapeSorgulama, open: () => ensureUI() };
 
   // Yan panel veri köprüsü: panel sayfa DOM'una dokunamaz, listeyi buradan ister.
-  // Satırlar DOM'suz düz obje olarak döner (yanıt taşınabilir olsun diye).
+  // Önce ana sayfadaki tablo (kullanıcı mahkemeyi burada seçer), olmazsa
+  // yüzen panelin çerçevesi okunur. Satırlar DOM'suz düz objedir.
   try {
     chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (msg && msg.type === 'EDURUSMA_GET_LIST') {
         (async () => {
           try {
             const g = gridRowsFromDoc(document);
-            const rows = (g && g.rows ? g.rows : []).map((r, i) => ({ i, tarih: r.tarih, mahkeme: r.mahkeme, dosya: r.dosya, aciklama: r.aciklama }));
-            sendResponse({ ok: true, url: location.href, rows });
+            if (g && g.rows && g.rows.length) {
+              const rows = g.rows.map((r, i) => ({ i, tarih: r.tarih, mahkeme: r.mahkeme, dosya: r.dosya, aciklama: r.aciklama, via: 'sayfa' }));
+              sendResponse({ ok: true, url: location.href, rows });
+              return;
+            }
+            // Yedek: yüzen panelin çerçevesi (aynı kaynak, okunabilir)
+            let fdoc = null;
+            try {
+              const fr = iframe && (iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document));
+              if (fr) fdoc = fr;
+            } catch (e) {}
+            if (fdoc) {
+              const g2 = gridRowsFromDoc(fdoc);
+              const rows = (g2 && g2.rows ? g2.rows : []).map((r, i) => ({ i, tarih: r.tarih, mahkeme: r.mahkeme, dosya: r.dosya, aciklama: r.aciklama, via: 'panel' }));
+              sendResponse({ ok: true, url: location.href, rows });
+              return;
+            }
+            sendResponse({ ok: true, url: location.href, rows: [] });
           } catch (e) { sendResponse({ ok: false }); }
         })();
         return true;
       }
-      if (msg && msg.type === 'EDURUSMA_GOTO_ROW') {
+      if (msg && msg.type === 'EDURUSMA_GOTO') {
+        // Dosya no + saat ile satırı bul (sanal kaydırmada indeksler kayar, metin sabittir)
         try {
-          const g = gridRowsFromDoc(document);
-          const all = (g && g.rows) || [];
-          const r = all[msg.index];
-          if (r && r.el) {
-            r.el.scrollIntoView({ block: 'center' });
-            r.el.style.outline = '2px solid #1a56db';
-            setTimeout(() => { try { r.el.style.outline = ''; } catch (e) {} }, 2500);
+          const ds = String(msg.dosya || ''), st = String(msg.saat || '');
+          const docs = [document];
+          try {
+            const f = iframe && (iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document));
+            if (f) docs.push(f);
+          } catch (e) {}
+          let hit = null;
+          for (const dc of docs) {
+            if (hit || !dc || !dc.querySelectorAll) continue;
+            dc.querySelectorAll('.dx-data-row').forEach(tr => {
+              if (hit || !tr.cells || !tr.cells.length) return;
+              const txt = Array.from(tr.cells).map(td => td.innerText || '').join(' ');
+              if (ds && txt.indexOf(ds) !== -1 && (!st || txt.indexOf(st) !== -1)) hit = tr;
+            });
+          }
+          if (hit) {
+            hit.scrollIntoView({ block: 'center' });
+            hit.style.outline = '2px solid #1a56db';
+            setTimeout(() => { try { hit.style.outline = ''; } catch (e) {} }, 2500);
             sendResponse({ ok: true });
           } else sendResponse({ ok: false });
         } catch (e) { sendResponse({ ok: false }); }

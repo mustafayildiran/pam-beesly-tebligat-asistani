@@ -5,8 +5,9 @@
   const AUTO_KEY = 'edurusma_side_auto';
   const statusEl = document.getElementById('sp-status');
   const todayBox = document.getElementById('sp-today');
-  const allBox = document.getElementById('sp-all');
   const autoSel = document.getElementById('sp-auto');
+  const frame = document.getElementById('sp-frame');
+  const TAKIP_URL = 'https://avukat.uyap.gov.tr/durusma-takip';
   let timer = null;
   let lastTabId = null;
 
@@ -52,19 +53,22 @@
       s.textContent = sub;
       b.appendChild(s);
     }
-    b.addEventListener('click', () => gotoRow(r.i));
+    b.addEventListener('click', () => gotoRow(r));
     return b;
   }
 
-  async function gotoRow(i) {
+  async function gotoRow(r) {
     try {
-      if (lastTabId) await chrome.tabs.sendMessage(lastTabId, { type: 'EDURUSMA_GOTO_ROW', index: i });
+      if (!lastTabId) return;
+      const m = String(r.tarih || '').match(/(\d{1,2}):(\d{2})/) || [];
+      const saat = m.length ? (m[1].padStart(2, '0') + ':' + m[2]) : '';
+      const resp = await chrome.tabs.sendMessage(lastTabId, { type: 'EDURUSMA_GOTO', dosya: r.dosya, saat });
+      if (!resp || !resp.ok) setStatus('Satır sayfada bulunamadı (liste dışında olabilir).');
     } catch (_) {}
   }
 
   function render(rows) {
     todayBox.innerHTML = '';
-    allBox.innerHTML = '';
     const t = todayStr();
     const todays = rows.filter(r => (r.tarih || '').indexOf(t) !== -1);
     const head = document.createElement('div');
@@ -89,19 +93,11 @@
       });
       todayBox.appendChild(list);
     }
-    if (rows.length) {
-      const list = document.createElement('div');
-      list.className = 'sp-list';
-      rows.forEach((r) => {
-        list.appendChild(itemEl(r, `${r.tarih} · ${r.dosya}`, '', `${shortMahkeme(r.mahkeme)} · ${shortDurum(r.aciklama)}`));
-      });
-      allBox.appendChild(list);
-    }
+    // Tam liste alttaki canlı çerçevede; burada yalnız bugün özeti durur.
   }
 
   function hint(msg) {
     todayBox.innerHTML = '';
-    allBox.innerHTML = '';
     const e = document.createElement('div');
     e.className = 'sp-empty';
     e.textContent = msg;
@@ -148,6 +144,9 @@
   }
 
   document.getElementById('sp-refresh').addEventListener('click', () => load(false));
+  document.getElementById('sp-framerefresh').addEventListener('click', () => {
+    try { frame.src = TAKIP_URL; setStatus('Takip sayfası yenileniyor...'); } catch (_) {}
+  });
   autoSel.addEventListener('change', () => { restartAuto(); setStatus('Otomatik: ' + (autoSel.value === '0' ? 'kapalı' : (autoSel.value / 1000) + ' sn')); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });
   (async function init() {
