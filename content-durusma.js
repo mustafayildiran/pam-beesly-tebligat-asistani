@@ -314,10 +314,15 @@
         + 'body{margin:0!important}html,body{height:auto!important;min-height:0!important;overflow:visible!important}'
         + '.content,.layout-main{margin:0!important;padding:8px!important;height:auto!important;min-height:0!important;overflow:visible!important}'
         + '.dx-datagrid{font-size:11px!important}'
-        + '.dx-datagrid .dx-row > td{padding:3px 4px!important;white-space:normal!important;word-break:break-word!important}'
-        + '.dx-scrollable-container,.dx-scrollable-content{overflow:visible!important;height:auto!important;max-height:none!important}'
-        + '.dx-datagrid-rowsview{max-height:none!important}'
-        + 'html,body{scrollbar-width:none!important}::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}';
+        + '.dx-datagrid .dx-row > td{padding:3px 4px!important;white-space:normal!important;word-break:break-word!important;min-width:64px!important}'
+        + '.dx-scrollable-container{overflow:visible!important;height:auto!important;max-height:none!important}'
+        + '.dx-scrollable-content{height:auto!important;max-height:none!important}'
+        // Tablonun kendi kaydırması çalışsın (sanal satır çizimi buna bağlıdır);
+        // yoksa sütunlar panele ezilip harfler dikey dizilir.
+        + '.dx-datagrid-rowsview > .dx-scrollable-wrapper > .dx-scrollable-container,.dx-datagrid-rowsview.dx-scrollable > .dx-scrollable-wrapper > .dx-scrollable-container{overflow:auto!important}'
+        + '.dx-datagrid-rowsview{max-height:65vh!important}'
+        + '.dx-datagrid-rowsview ::-webkit-scrollbar{width:8px!important;height:8px!important;display:block!important}'
+        + 'html,body{scrollbar-width:none!important}html::-webkit-scrollbar,body::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}';
       doc.head.appendChild(st);
     } catch (e) {}
   }
@@ -344,7 +349,7 @@
   function refreshSizeBtns() {
     if (!panel) return;
     const btns = panel.querySelectorAll('.ed-sizes button');
-    const sizes = [[340, 420], [360, 440], [440, 560]];
+    const sizes = [[340, 420], [420, 540], [560, 680]];
     btns.forEach((b, i) => b.classList.toggle('ed-active', state.w === sizes[i][0] && state.h === sizes[i][1]));
   }
 
@@ -409,7 +414,7 @@
     const status = el('div', { id: 'edurusma-takip-status' });
     statusTxt = el('span', {}, 'Hazır');
     const sizes = el('span', { class: 'ed-sizes' });
-    [['S', 340, 420], ['M', 360, 440], ['L', 440, 560]].forEach(([label, w, h]) => {
+    [['S', 340, 420], ['M', 420, 540], ['L', 560, 680]].forEach(([label, w, h]) => {
       const b = el('button', { type: 'button', title: label === 'S' ? 'Küçük' : label === 'M' ? 'Orta' : 'Büyük' }, label);
       b.addEventListener('click', ev => { ev.stopPropagation(); state.w = w; state.h = h; setMini(false); applyGeom(); saveState(); });
       sizes.appendChild(b);
