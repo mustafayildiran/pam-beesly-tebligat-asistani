@@ -115,18 +115,22 @@
       return;
     }
     lastTabId = tab.id;
+    let host = '';
+    try { host = new URL(tab.url || '').hostname; } catch (_) {}
+    setStatus('Okunuyor: ' + (host || 'bilinmiyor') + ' ...');
     try {
       const resp = await chrome.tabs.sendMessage(tab.id, { type: 'EDURUSMA_GET_LIST' });
       if (resp && resp.ok && Array.isArray(resp.rows)) {
         render(resp.rows);
-        setStatus('Güncellendi: ' + new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        setStatus('Güncellendi: ' + new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ` · ${resp.rows.length} satır`);
       } else {
         hint('Liste okunamadı. Sayfada mahkemeyi seçip Görüntüle’ye basın.');
-        setStatus('Hazır');
+        setStatus('Hazır · 0 satır');
       }
     } catch (e) {
-      hint('Sayfaya ulaşılamadı. Sekmeyi yenileyip tekrar deneyin.');
-      setStatus('Hazır');
+      const why = (chrome.runtime && chrome.runtime.lastError && chrome.runtime.lastError.message) || String((e && e.message) || e);
+      hint('Sayfaya ulaşılamadı.');
+      setStatus('Hata: ' + why + ' — eklentiyi chrome://extensions üzerinden yenileyin');
     }
   }
 
