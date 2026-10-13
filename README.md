@@ -148,7 +148,9 @@ Tablodaki gerekçelere bakın; her izin tek bir işleve bağlıdır, fazlası yo
 Sonuç kutusundaki `İz:` satırı hangi adımın takıldığını söyler. UETS için formdaki **Bağlantıyı Test Et** düğmesi oturumu denetler. Çoğu sorun eklentiyi `chrome://extensions` sayfasından yenileyince çözülür.
 
 **e-Devlet ile giriş yapabilir miyim?**
-Evet. Popup'taki **Bağlan** düğmesi UETS giriş sayfasını açar; e-Devlet/e-İmza/Mobil İmza ile giriş yapabilirsiniz.
+Evet. Giriş formundaki **e-Devlet ile giriş (sitede)** düğmesi UETS giriş sayfasını açar;
+e-Devlet/e-İmza/Mobil İmza ile sitede giriş yapın, sonra popup'tan Sorgula'ya basın.
+(Site oturumu sorgularda yedek yol olarak kullanılır; uzantı şifrenizi görmez ve saklamaz.)
 
 **WhatsApp'tan inen .udf dosyası bozuk mu çıkıyor?**
 Hayır. Eklenti dosya içeriğine dokunmaz, yalnızca indirme anında dosya adını düzeltir (`.zip` dayatmasını kaldırır).

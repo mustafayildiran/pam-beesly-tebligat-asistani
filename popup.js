@@ -291,8 +291,13 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshUetsStatus();
     loadCaptcha();
   });
-  document.getElementById('uetsTestBtn').addEventListener('click', async () => {
-    formMsg('Bağlantı test ediliyor...', false);
+  // e-Devlet/e-İmza: UETS giriş sayfasını açar; sitede giriş yapanın oturumu
+  // sorgularda yedek yol olarak kullanılır (uzantı şifre görmez, saklamaz).
+  document.getElementById('uetsEdevletBtn').addEventListener('click', () => {
+    try { chrome.tabs.create({ url: 'https://ptt.etebligat.gov.tr/login' }); } catch (_) {}
+    formMsg('UETS giriş sayfası açıldı. Sitede e-Devlet ile giriş yapın, sonra buradan Sorgula’ya basın; site oturumunuz kullanılır.', false);
+  });
+  document.getElementById('uetsTestBtn').addEventListener('click', async () => {    formMsg('Bağlantı test ediliyor...', false);
     try {
       const r = await chrome.runtime.sendMessage({ type: 'BEESLY_UETS_TEST' });
       const parts = [
