@@ -23,7 +23,7 @@
   });
   document.getElementById('sp-zoom-out').addEventListener('click', () => {
     const cur = parseFloat(frame.style.zoom) || 1;
-    applyZoom(Math.max(0.6, Math.round((cur - 0.1) * 100) / 100));
+    applyZoom(Math.max(0.5, Math.round((cur - 0.1) * 100) / 100));
   });
   document.getElementById('sp-framerefresh').addEventListener('click', () => {
     try { frame.src = TAKIP_URL; setStatus('Takip sayfası yenileniyor...'); } catch (_) {}
