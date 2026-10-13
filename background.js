@@ -584,6 +584,12 @@ chrome.runtime.onInstalled.addListener(() => {
           title: "Beesly ile sorgula",
           contexts: ["selection"]
         });
+        chrome.contextMenus.create({
+          id: "beesly-durusma-panel",
+          title: "Duruşma panelini yan panelde aç",
+          contexts: ["page"],
+          documentUrlPatterns: ["*://*.uyap.gov.tr/*", "*://uyap.gov.tr/*"]
+        });
       } catch (_) {}
     });
   } catch (_) {}
@@ -604,6 +610,13 @@ function openPopupWindow(srcTabId) {
 }
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === "beesly-durusma-panel") {
+    // Sağ-tık güvenilir harekettir: yan panel burada garanti açılır
+    try {
+      if (tab?.id) chrome.sidePanel.open({ tabId: tab.id }).catch(() => {});
+    } catch (_) {}
+    return;
+  }
   if (info.menuItemId !== "beesly-sorgula") return;
   // windowId ile dene (odak çalmaz); olmazsa pencere yedeği (kaynak sekmeyle)
   const windowId = tab?.windowId;
@@ -615,8 +628,15 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
-// ---- Klavye kısayolu (Ctrl+Shift+Y): yalnızca popup'ı açar ----
+// ---- Klavye kısayolları ----
 chrome.commands.onCommand.addListener(async (command) => {
+  if (command === "beesly-durusma-panel") {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id) await chrome.sidePanel.open({ tabId: tab.id });
+    } catch (_) {}
+    return;
+  }
   if (command !== "beesly-query-selection") return;
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -634,7 +654,18 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
-    if (msg?.type === "BEESLY_OPEN_PTT") {
+    if (msg?.type === "BEESLY_OPEN_SIDEPANEL") {
+      // Chrome, yan paneli yalnız güvenilir hareketle açtırır; yüzen düğmeden
+      // gelen istek reddedilirse içerik tarafı yüzen pencereye düşer.
+      try {
+        const tabId = sender?.tab?.id;
+        if (!tabId) throw new Error("sekme yok");
+        await chrome.sidePanel.open({ tabId });
+        sendResponse({ ok: true });
+      } catch (e) {
+        sendResponse({ ok: false, error: String(e?.message || e) });
+      }
+    } else if (msg?.type === "BEESLY_OPEN_PTT") {
       await openPtt(msg.barcode);
       sendResponse({ ok: true });
     } else if (msg?.type === "BEESLY_OPEN_PTT_PAGE") {

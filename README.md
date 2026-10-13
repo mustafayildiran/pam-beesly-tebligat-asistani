@@ -20,7 +20,7 @@ UYAP Avukat Portal için genel asistan: tebligat barkodlarını tek tıkla sorgu
 - **Temiz çalışma:** sorgu sekmeleri iş bitince otomatik kapanır, UYAP odağı kaybolmaz, barkod tek tıkla panoya kopyalanır
 - **The Office temalı arayüz** (Dunder Mifflin · UYAP Şubesi)
 - **EYP görüntüleyici:** UYAP'ta `.eyp` dosyalarını indirmeden önizleme (sayfa içi 👁 Görüntüle düğmeleri)
-- **E-Duruşma takip penceresi:** duruşma-sorgulama ve duruşma-takip sayfalarında sağ altta ◎ Takip butonu; `/durusma-takip` listesini sürüklenebilir, yeniden boyutlandırılabilir küçük panelde açar (otomatik yenileme: kapalı / 15 sn / 30 sn / 60 sn / 2 dk). Sekme değişmediği için e-duruşma bağlantısı açık kalır. Panel üstündeki **Bugün** şeridi günün duruşmalarını saat + sıra numarasıyla listeler, sıradakini işaretler; tıklayınca listede o satıra kaydırır. (Önce panel içinden mahkemeyi seçip Görüntüle'ye basın; şerit listeyi otomatik yakalar.)
+- **E-Duruşma takip paneli:** duruşma sayfalarında sağ alttaki ◎ Takip butonu listeyi tam boy **yan panelde** açar (olmazsa yüzen pencere yedeği); sağ-tık menüsü ve `Ctrl+Shift+E` ile de açılır. Üstteki **Bugün** şeridi günün duruşmalarını saat + sıra numarasıyla listeler, sıradakini işaretler; tıklayınca sayfada o satıra kaydırır.
 - **WhatsApp UDF düzeltici:** WhatsApp Web'de `.udf` dosyasının `.udf.zip` olarak inmesini engeller
 (`.udf` aynen bırakılır, `.udf.zip` ise `.udf` yapılır). Dosya adı asla baştan yazılmaz,
 saf `.zip` dosyalarına dokunulmaz, baytlara dokunulmaz.
@@ -52,7 +52,7 @@ saf `.zip` dosyalarına dokunulmaz, baytlara dokunulmaz.
 3. UYAP'ta barkodlu bir sayfayı açın; ikonda sayı rozeti belirecek
 4. Kısayolu değiştirmek için: `chrome://extensions/shortcuts`
 5. UETS sorgusu için popup'taki **Giriş Yap** formundan bir kez giriş yapın (SMS kodu gelebilir)
-6. E-Duruşma için: `avukat.uyap.gov.tr` üzerinde duruşma-sorgulama veya duruşma-takip sayfasını açın, sağ alttaki ◎ Takip butonuna basın; yenileme aralığını panel başlığından ayarlayın
+6. E-Duruşma için: `avukat.uyap.gov.tr` üzerinde duruşma sayfasını açın, sağ alttaki ◎ Takip butonuna (veya sağ-tık → Duruşma paneli, veya `Ctrl+Shift+E`) basın; liste yan panelde tam boy açılır
 7. WhatsApp UDF için: `web.whatsapp.com` sekmesinde bir `.udf` dosyasının indir düğmesine normal şekilde basın; dosya `.udf` olarak iner (ek ayar gerekmez)
 
 ## Veri Güvenliği ve Gizlilik
@@ -162,7 +162,7 @@ dosyanın WinRAR ile açılmaya çalışılmasıdır.
 
 ## Sürüm
 
-v1.3.3 — PTT + UETS sorgulama, E-Duruşma takip penceresi + Bugün şeridi (+ bağımsız E-Duruşma paketi), EYP görüntüleyici (+ bağımsız EYP paketi), WhatsApp UDF düzeltici (+ bağımsız UDF paketi), rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
+v1.4.0 — PTT + UETS sorgulama, E-Duruşma yan panel + Bugün şeridi (+ bağımsız E-Duruşma paketi), EYP görüntüleyici (+ bağımsız EYP paketi), WhatsApp UDF düzeltici (+ bağımsız UDF paketi), rozet, sağ-tık/kısayol, eklenti içi giriş, Office teması.
 
 ## Destek
 

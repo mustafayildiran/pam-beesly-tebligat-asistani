@@ -445,8 +445,15 @@
   }
 
   function buildBtn() {
-    openBtn = el('button', { id: 'edurusma-open-btn', type: 'button', title: 'Duruşma Takip penceresini aç/kapat' }, '◎ Takip');
-    openBtn.addEventListener('click', () => toggle());
+    openBtn = el('button', { id: 'edurusma-open-btn', type: 'button', title: 'Duruşma Takip: önce yan panel denenir, olmazsa yüzen pencere açılır' }, '◎ Takip');
+    openBtn.addEventListener('click', async () => {
+      // Yan panel (geniş liste) öncelikli; Chrome izin vermezse yüzen pencere yedeği
+      try {
+        const r = await chrome.runtime.sendMessage({ type: 'BEESLY_OPEN_SIDEPANEL' });
+        if (r && r.ok) return;
+      } catch (e) {}
+      toggle();
+    });
     (document.body || document.documentElement).appendChild(openBtn);
   }
 
@@ -505,6 +512,38 @@
   }
   window.__EDURUSMA_SCRAPE__ = scrapeSorgulama;
   window.__EDURUSMA__ = { version: ED_VER, state, scrape: scrapeSorgulama, open: () => ensureUI() };
+
+  // Yan panel veri köprüsü: panel sayfa DOM'una dokunamaz, listeyi buradan ister.
+  // Satırlar DOM'suz düz obje olarak döner (yanıt taşınabilir olsun diye).
+  try {
+    chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+      if (msg && msg.type === 'EDURUSMA_GET_LIST') {
+        (async () => {
+          try {
+            const g = gridRowsFromDoc(document);
+            const rows = (g && g.rows ? g.rows : []).map((r, i) => ({ i, tarih: r.tarih, mahkeme: r.mahkeme, dosya: r.dosya }));
+            sendResponse({ ok: true, url: location.href, rows });
+          } catch (e) { sendResponse({ ok: false }); }
+        })();
+        return true;
+      }
+      if (msg && msg.type === 'EDURUSMA_GOTO_ROW') {
+        try {
+          const g = gridRowsFromDoc(document);
+          const all = (g && g.rows) || [];
+          const r = all[msg.index];
+          if (r && r.el) {
+            r.el.scrollIntoView({ block: 'center' });
+            r.el.style.outline = '2px solid #1a56db';
+            setTimeout(() => { try { r.el.style.outline = ''; } catch (e) {} }, 2500);
+            sendResponse({ ok: true });
+          } else sendResponse({ ok: false });
+        } catch (e) { sendResponse({ ok: false }); }
+        return true;
+      }
+      return false;
+    });
+  } catch (e) {}
 
   (async function init() {
     await loadState();

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="edurusma-sidepanel.css">
+</head>
+<body>
+<header class="sp-head">
+  <span class="sp-title">◎ Duruşma Takip</span>
+  <select id="sp-auto" title="Otomatik yenileme">
+    <option value="0">Oto: kapalı</option>
+    <option value="15000">Oto: 15 sn</option>
+    <option value="30000" selected>Oto: 30 sn</option>
+    <option value="60000">Oto: 60 sn</option>
+    <option value="120000">Oto: 2 dk</option>
+  </select>
+  <button id="sp-refresh" type="button" title="Şimdi yenile">Yenile</button>
+</header>
+<div id="sp-status" class="sp-status">Hazır</div>
+<div id="sp-today"></div>
+<div class="sp-sep">Tümü</div>
+<div id="sp-all"></div>
+<div class="sp-foot">Beesly Desk ailesindendir · satıra tıklayınca sayfada gösterilir</div>
+<script src="edurusma-sidepanel.js"></script>
+</body>
+</html>

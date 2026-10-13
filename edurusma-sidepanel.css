@@ -1,0 +1,19 @@
+/* E-Duruşma yan paneli: tam boy liste, tıklayınca sayfada göster */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 10px; font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; background: #f1f5f9; color: #1e293b; }
+.sp-head { display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg,#1a56db,#0e3aa8); color: #fff; border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; }
+.sp-title { flex: 1; font-weight: 700; font-size: 14px; }
+.sp-head select { font-size: 12px; border-radius: 6px; border: none; padding: 3px 5px; color: #111; }
+.sp-head button { border: 1px solid rgba(255,255,255,.4); border-radius: 6px; padding: 3px 9px; font-size: 12px; cursor: pointer; background: rgba(255,255,255,.16); color: #fff; }
+.sp-head button:hover { background: rgba(255,255,255,.32); }
+.sp-status { font-size: 11px; color: #64748b; margin: 0 2px 8px; }
+.sp-dayhead { font-weight: 700; color: #1a56db; margin: 6px 2px; font-size: 13px; }
+.sp-empty { color: #94a3b8; font-size: 12px; margin: 4px 2px; }
+.sp-list { display: flex; flex-direction: column; gap: 5px; }
+.sp-item { text-align: left; border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 6px 9px; font-size: 12px; cursor: pointer; color: #1e293b; }
+.sp-item:hover { background: #e8eefb; }
+.sp-item .sp-sub { display: block; font-size: 11px; color: #64748b; margin-top: 1px; }
+.sp-item.ed-next { border-color: #16a34a; background: #f0fdf4; font-weight: 700; }
+.sp-item.ed-past { opacity: .55; }
+.sp-sep { font-weight: 700; color: #475569; margin: 12px 2px 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.sp-foot { font-size: 10px; color: #94a3b8; text-align: center; margin: 12px 0 4px; }
