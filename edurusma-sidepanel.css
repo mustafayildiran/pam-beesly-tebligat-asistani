@@ -15,8 +15,12 @@ body { margin: 0; padding: 10px; font: 13px/1.45 system-ui, -apple-system, "Sego
 .sp-item .sp-sub { display: block; font-size: 11px; color: #64748b; margin-top: 1px; }
 .sp-item.ed-next { border-color: #16a34a; background: #f0fdf4; font-weight: 700; }
 .sp-item.ed-past { opacity: .55; }
-.sp-livehead { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-weight: 700; color: #475569; margin: 12px 2px 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
-.sp-livehead button { border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; font-size: 11px; padding: 2px 8px; cursor: pointer; color: #334155; text-transform: none; letter-spacing: normal; font-weight: 400; }
+.sp-zoom { display: inline-flex; align-items: center; gap: 4px; }
+.sp-zoom button { min-width: 24px; }
+#sp-zoom-val { font-size: 11px; color: #fff; min-width: 38px; text-align: center; }
+#sp-frame { flex: 1 1 auto; min-height: 320px; width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; }
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; }
 .sp-row { display: flex; align-items: center; gap: 6px; border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; padding: 6px 9px; margin-bottom: 5px; }
 .sp-rowmain { flex: 1; min-width: 0; text-align: left; border: none; background: none; padding: 0; font-size: 12px; cursor: pointer; color: #1e293b; }
 .sp-rowmain .sp-sub { display: block; font-size: 11px; color: #64748b; margin-top: 1px; }
