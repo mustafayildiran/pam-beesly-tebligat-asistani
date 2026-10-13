@@ -154,6 +154,8 @@ Evet. Giriş formundaki **e-Devlet ile giriş (sitede)** düğmesi UETS giriş s
 e-Devlet/e-İmza/Mobil İmza ile sitede giriş yapın, sonra popup'tan Sorgula'ya basın.
 Rozet ilk başta "giriş gerekli" göstermeye devam eder; ilk başarılı sorgudan sonra
 **site ile çalıştı · X önce** olur (2 saat geçerli; uzantı şifrenizi görmez ve saklamaz).
+**Kontrol Et** düğmesi de lafta kalmaz: kayıtlı yoklama barkodunuzla canlı deneme sorgusu
+yapar; çalışırsa rozet düzelir, çalışmazsa giriş formu açılır.
 
 **WhatsApp'tan inen .udf dosyası bozuk mu çıkıyor?**
 Hayır. Eklenti dosya içeriğine dokunmaz, yalnızca indirme anında dosya adını düzeltir (`.zip` dayatmasını kaldırır).

@@ -128,7 +128,36 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const r = await chrome.runtime.sendMessage({ type: 'BEESLY_UETS_TOKENINFO' });
       if (!r?.present) {
-        refreshUetsStatus();
+        // Eklenti jetonu yok: kayıtlı yoklama barkoduyla CANLI deneme sorgusu.
+        // Çalışırsa rozet düzelir (site girişi kanıtlanır), çalışmazsa giriş formu açılır.
+        let canary = null;
+        try { canary = (await chrome.storage.local.get('beeslyCanary'))?.beeslyCanary; } catch (_) {}
+        if (!canary) {
+          // Yoklama barkodu henüz kaydedilmemiş: kartı göster
+          canarySetup.style.display = 'block';
+          uetsStatus.textContent = '● UETS: yoklama barkodu gerekli';
+          uetsStatus.className = 'dot off';
+          return;
+        }
+        uetsStatus.textContent = '● UETS: canlı sorgu deneniyor...';
+        const t0 = Date.now();
+        try { await chrome.runtime.sendMessage({ type: 'BEESLY_OPEN_UETS', barcode: canary }); } catch (_) {}
+        for (let i = 0; i < 20; i++) {
+          await new Promise((res) => setTimeout(res, 2000));
+          let resp = null;
+          try { resp = await chrome.runtime.sendMessage({ type: 'BEESLY_GET_RESULT', barcode: canary }); } catch (_) {}
+          // Yalnızca bu denemeden gelen taze sonuç sayılır (eski önbellek değil)
+          const s = resp?.result && resp.result.at >= t0 ? resp.result.summary : null;
+          if (s) {
+            if (s.ok) { refreshUetsStatus(); return; }
+            break; // gerçek hata: giriş yok
+          }
+        }
+        uetsStatus.textContent = '● UETS: bağlantı doğrulanamadı';
+        uetsStatus.className = 'dot off';
+        uetsFormBtn.style.display = '';
+        uetsCheckBtn.style.display = 'none';
+        uetsForm.style.display = 'block';
         return;
       }
       if (r.needsCanary) {
