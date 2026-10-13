@@ -13,7 +13,8 @@
     "alarms",
     "downloads",
     "webRequest",
-    "sidePanel"
+    "sidePanel",
+    "declarativeNetRequest"
   ],
   "commands": {
     "beesly-query-selection": {
@@ -92,6 +93,11 @@
   },
   "side_panel": {
     "default_path": "edurusma-sidepanel.html"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      { "id": "uyap-frame", "enabled": true, "path": "durusma-frame-rules.json" }
+    ]
   },
   "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" }
 }

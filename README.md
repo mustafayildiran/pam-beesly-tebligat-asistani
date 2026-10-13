@@ -129,6 +129,7 @@ veya aşağıdaki üç adımla kendiniz doğrulayabilirsiniz:
 | `contextMenus` | Sağ-tık kısayolu için |
 | `alarms` | Boşta kalan sorgu sekmesini kapatmak için |
 | `downloads`, `webRequest` | EYP görüntüleyici: indirmeyi yakalayıp önizlemeye dönüştürmek için (dosya indirilmez); WhatsApp UDF: indirme anında dosya adını düzeltmek için (içerik değiştirilmez) |
+| `sidePanel`, `declarativeNetRequest` | E-Duruşma yan paneli açmak için; UYAP'ın çerçeve yasağını **yalnızca eklenti çerçevelerinde** kaldırmak için (ana sekmedeki UYAP güvenliği aynen kalır) |
 
 Kodun tamamı bu depoda açıktır; tarayıcının Geliştirici Araçları → Ağ sekmesinden trafiği kendiniz de denetleyebilirsiniz.
 
