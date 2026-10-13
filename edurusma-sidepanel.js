@@ -1,109 +1,86 @@
-// E-Duruşma yan paneli: listedeki veriyi sekmadaki content script'ten ister,
-// tam boy gösterir. Sayfa değişse de panel açık kalır.
+// E-Duruşma yan paneli: sade liste (dosya no + tarih + açıklama + görüntüle).
+// Veriyi sekmadaki content script'ten ister; "Dosya Görüntüle" sayfadaki
+// göz düğmesine bastırır. Liste kaydırıldıkça içerik tarafında birikir.
 (function () {
   'use strict';
   const AUTO_KEY = 'edurusma_side_auto';
   const statusEl = document.getElementById('sp-status');
-  const todayBox = document.getElementById('sp-today');
+  const listBox = document.getElementById('sp-list');
   const autoSel = document.getElementById('sp-auto');
-  const frame = document.getElementById('sp-frame');
-  const zoomVal = document.getElementById('sp-zoom-val');
-  const TAKIP_URL = 'https://avukat.uyap.gov.tr/durusma-takip';
-  const ZOOM_KEY = 'edurusma_side_zoom';
   let timer = null;
   let lastTabId = null;
 
   function setStatus(t) { if (statusEl) statusEl.textContent = t; }
-  function todayStr() {
-    const d = new Date(), p = (n) => String(n).padStart(2, '0');
-    return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
-  }
-  function shortMahkeme(s) {
-    return String(s || '')
-      .replace('Ağır Ceza Mahkemesi', 'ACM')
-      .replace('Asliye Ceza Mahkemesi', 'Asliye Ceza')
-      .replace('Asliye Hukuk Mahkemesi', 'Asliye Hukuk')
-      .replace('Sulh Ceza Hakimliği', 'SCH')
-      .replace('Sulh Hukuk Mahkemesi', 'Sulh Hukuk')
-      .replace('İcra Hukuk Mahkemesi', 'İcra Hukuk')
-      .replace(' Mahkemesi', '').replace(' Hakimliği', '').trim();
-  }
-  function minsOf(tarih) {
-    const m = String(tarih || '').match(/(\d{1,2}):(\d{2})/) || [];
-    return m.length ? (+m[1]) * 60 + (+m[2]) : null;
-  }
   function shortDurum(s) {
     const t = String(s || '').trim();
     if (/yapıldı/i.test(t)) return 'Yapıldı';
     if (/devam/i.test(t)) return 'Devam Ediyor';
     return t.slice(0, 24);
   }
-  function fmtSaat(mins) {
-    if (mins == null) return '??:??';
-    return String(Math.floor(mins / 60)).padStart(2, '0') + ':' + String(mins % 60).padStart(2, '0');
-  }
 
-  function itemEl(r, label, cls, sub) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'sp-item' + (cls ? ' ' + cls : '');
-    b.title = `${r.mahkeme} ${r.dosya} ${r.tarih} (sayfada göster)`;
-    b.textContent = label;
-    if (sub) {
-      const s = document.createElement('span');
-      s.className = 'sp-sub';
-      s.textContent = sub;
-      b.appendChild(s);
-    }
-    b.addEventListener('click', () => gotoRow(r));
-    return b;
+  function saatOf(tarih) {
+    const m = String(tarih || '').match(/(\d{1,2}):(\d{2})/) || [];
+    return m.length ? (String(m[1]).padStart(2, '0') + ':' + m[2]) : '';
   }
 
   async function gotoRow(r) {
     try {
       if (!lastTabId) return;
-      const m = String(r.tarih || '').match(/(\d{1,2}):(\d{2})/) || [];
-      const saat = m.length ? (m[1].padStart(2, '0') + ':' + m[2]) : '';
-      const resp = await chrome.tabs.sendMessage(lastTabId, { type: 'EDURUSMA_GOTO', dosya: r.dosya, saat });
+      const resp = await chrome.tabs.sendMessage(lastTabId, { type: 'EDURUSMA_GOTO', dosya: r.dosya, saat: saatOf(r.tarih) });
       if (!resp || !resp.ok) setStatus('Satır sayfada bulunamadı (liste dışında olabilir).');
     } catch (_) {}
   }
 
+  async function openDosya(r) {
+    try {
+      if (!lastTabId) return;
+      setStatus('Dosya açılıyor: ' + r.dosya + ' ...');
+      const resp = await chrome.tabs.sendMessage(lastTabId, { type: 'EDURUSMA_OPEN_DOSYA', dosya: r.dosya });
+      setStatus(resp && resp.ok ? 'Dosya açıldı: ' + r.dosya : 'Düğme bulunamadı: ' + r.dosya);
+    } catch (_) {
+      setStatus('Sayfaya ulaşılamadı.');
+    }
+  }
+
   function render(rows) {
-    todayBox.innerHTML = '';
-    const t = todayStr();
-    const todays = rows.filter(r => (r.tarih || '').indexOf(t) !== -1);
-    const head = document.createElement('div');
-    head.className = 'sp-dayhead';
-    head.textContent = `Bugün (${todays.length}) · ${t}`;
-    todayBox.appendChild(head);
-    const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
-    if (!todays.length) {
+    listBox.innerHTML = '';
+    if (!rows.length) {
       const e = document.createElement('div');
       e.className = 'sp-empty';
-      e.textContent = rows.length ? 'Bugün duruşma yok' : 'Liste boş';
-      todayBox.appendChild(e);
-    } else {
-      let nextIdx = -1;
-      const mins = todays.map(r => minsOf(r.tarih));
-      mins.forEach((m, i) => { if (m != null && m >= nowMin && nextIdx < 0) nextIdx = i; });
-      const list = document.createElement('div');
-      list.className = 'sp-list';
-      todays.forEach((r, i) => {
-        const cls = (i === nextIdx ? 'ed-next' : '') + (mins[i] != null && mins[i] < nowMin ? ' ed-past' : '');
-        list.appendChild(itemEl(r, `${i === nextIdx ? '◉ ' : ''}${i + 1}) ${fmtSaat(mins[i])} · ${r.dosya}`, cls.trim(), `${shortMahkeme(r.mahkeme)} · ${shortDurum(r.aciklama)}`));
-      });
-      todayBox.appendChild(list);
+      e.textContent = 'Liste boş. Sayfada mahkemeyi seçip Görüntüle’ye basın.';
+      listBox.appendChild(e);
+      return;
     }
-    // Tam liste alttaki canlı çerçevede; burada yalnız bugün özeti durur.
+    rows.forEach((r) => {
+      const row = document.createElement('div');
+      row.className = 'sp-row';
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'sp-rowmain';
+      main.title = 'Sayfada bu satıra git';
+      main.textContent = `${r.dosya} · ${r.tarih}`;
+      const sub = document.createElement('span');
+      sub.className = 'sp-sub';
+      sub.textContent = shortDurum(r.aciklama);
+      main.appendChild(sub);
+      main.addEventListener('click', () => gotoRow(r));
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.className = 'sp-open';
+      open.title = 'Dosya Görüntüle';
+      open.textContent = '👁 Görüntüle';
+      open.addEventListener('click', () => openDosya(r));
+      row.append(main, open);
+      listBox.appendChild(row);
+    });
   }
 
   function hint(msg) {
-    todayBox.innerHTML = '';
+    listBox.innerHTML = '';
     const e = document.createElement('div');
     e.className = 'sp-empty';
     e.textContent = msg;
-    todayBox.appendChild(e);
+    listBox.appendChild(e);
   }
 
   async function load(silent) {
@@ -156,25 +133,6 @@
     } catch (_) {}
     load(false);
   });
-  document.getElementById('sp-framerefresh').addEventListener('click', () => {
-    try { frame.src = TAKIP_URL; setStatus('Takip sayfası yenileniyor...'); } catch (_) {}
-  });
-
-  function applyZoom(z) {
-    try {
-      frame.style.zoom = String(z);
-      zoomVal.textContent = Math.round(z * 100) + '%';
-      chrome.storage.local.set({ [ZOOM_KEY]: z });
-    } catch (_) {}
-  }
-  document.getElementById('sp-zoom-in').addEventListener('click', async () => {
-    const cur = parseFloat(frame.style.zoom) || 1;
-    applyZoom(Math.min(1.25, Math.round((cur + 0.1) * 100) / 100));
-  });
-  document.getElementById('sp-zoom-out').addEventListener('click', async () => {
-    const cur = parseFloat(frame.style.zoom) || 1;
-    applyZoom(Math.max(0.6, Math.round((cur - 0.1) * 100) / 100));
-  });
   autoSel.addEventListener('change', () => { restartAuto(); setStatus('Otomatik: ' + (autoSel.value === '0' ? 'kapalı' : (autoSel.value / 1000) + ' sn')); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });
   (async function init() {
@@ -182,12 +140,6 @@
       const r = await chrome.storage.local.get(AUTO_KEY);
       if (r && typeof r[AUTO_KEY] === 'number') autoSel.value = String(r[AUTO_KEY]);
     } catch (_) {}
-    try {
-      const z = await chrome.storage.local.get(ZOOM_KEY);
-      const zv = z && typeof z[ZOOM_KEY] === 'number' ? z[ZOOM_KEY] : 0.85;
-      frame.style.zoom = String(zv);
-      zoomVal.textContent = Math.round(zv * 100) + '%';
-    } catch (_) { frame.style.zoom = '0.85'; zoomVal.textContent = '85%'; }
     restartAuto();
     load(false);
   })();

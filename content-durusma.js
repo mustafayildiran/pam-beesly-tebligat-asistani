@@ -614,6 +614,19 @@
         sendResponse({ ok: true });
         return true;
       }
+      if (msg && msg.type === 'EDURUSMA_OPEN_DOSYA') {
+        // Satırın göz düğmesine bastır (id'ler satırlarda tekrar eder, satır içinden bulunur)
+        try {
+          const ds = String(msg.dosya || '');
+          const row = findRowEl(ds, '');
+          const btn = row && row.querySelector && row.querySelector('#dosya-goruntule, [title="Dosya Görüntüle"], button');
+          if (btn) {
+            btn.click();
+            sendResponse({ ok: true });
+          } else sendResponse({ ok: false });
+        } catch (e) { sendResponse({ ok: false }); }
+        return true;
+      }
       if (msg && msg.type === 'EDURUSMA_GOTO') {
         // Dosya no + saat ile satırı bul (sanal kaydırmada indeksler kayar, metin sabittir)
         try {

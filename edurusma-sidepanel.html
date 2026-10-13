@@ -6,29 +6,19 @@
 </head>
 <body>
 <header class="sp-head">
-  <span class="sp-title">◎ Duruşma Takip</span>
-  <select id="sp-auto" title="Otomatik yenileme (özet şeridi)">
+  <span class="sp-title">◎ Duruşma Listesi</span>
+  <select id="sp-auto" title="Otomatik yenileme">
     <option value="0">Oto: kapalı</option>
     <option value="15000">Oto: 15 sn</option>
     <option value="30000" selected>Oto: 30 sn</option>
     <option value="60000">Oto: 60 sn</option>
     <option value="120000">Oto: 2 dk</option>
   </select>
-  <button id="sp-refresh" type="button" title="Özet şeridini yenile">Yenile</button>
+  <button id="sp-refresh" type="button" title="Listeyi sıfırdan tara">Yenile</button>
 </header>
 <div id="sp-status" class="sp-status">Hazır</div>
-<div id="sp-today"></div>
-<div class="sp-livehead">
-  <span>Canlı takip</span>
-  <span class="sp-zoom">
-    <button id="sp-zoom-out" type="button" title="Küçült">−</button>
-    <span id="sp-zoom-val">100%</span>
-    <button id="sp-zoom-in" type="button" title="Büyüt">+</button>
-  </span>
-  <button id="sp-framerefresh" type="button" title="Takip sayfasını yeniden yükle (seçim sıfırlanır)">Sayfayı yenile</button>
-</div>
-<iframe id="sp-frame" src="https://avukat.uyap.gov.tr/durusma-takip" title="Duruşma Takip"></iframe>
-<div class="sp-foot">Beesly Desk ailesindendir · üstte özet, altta canlı sayfa</div>
+<div id="sp-list"></div>
+<div class="sp-foot">Beesly Desk ailesindendir · liste kaydırıldıkça tamamlanır</div>
 <script src="edurusma-sidepanel.js"></script>
 </body>
 </html>
