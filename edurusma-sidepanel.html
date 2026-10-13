@@ -18,9 +18,17 @@
 </header>
 <div id="sp-status" class="sp-status">Hazır</div>
 <div id="sp-today"></div>
-<div class="sp-sep">Tümü</div>
-<div id="sp-all"></div>
-<div class="sp-foot">Beesly Desk ailesindendir · satıra tıklayınca sayfada gösterilir · liste kaydırıldıkça tamamlanır</div>
+<div class="sp-livehead">
+  <span>Canlı takip</span>
+  <span class="sp-zoom">
+    <button id="sp-zoom-out" type="button" title="Küçült">−</button>
+    <span id="sp-zoom-val">100%</span>
+    <button id="sp-zoom-in" type="button" title="Büyüt">+</button>
+  </span>
+  <button id="sp-framerefresh" type="button" title="Takip sayfasını yeniden yükle (seçim sıfırlanır)">Sayfayı yenile</button>
+</div>
+<iframe id="sp-frame" src="https://avukat.uyap.gov.tr/durusma-takip" title="Duruşma Takip"></iframe>
+<div class="sp-foot">Beesly Desk ailesindendir · üstte özet, altta canlı sayfa</div>
 <script src="edurusma-sidepanel.js"></script>
 </body>
 </html>

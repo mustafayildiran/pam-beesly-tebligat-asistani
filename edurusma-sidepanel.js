@@ -5,8 +5,11 @@
   const AUTO_KEY = 'edurusma_side_auto';
   const statusEl = document.getElementById('sp-status');
   const todayBox = document.getElementById('sp-today');
-  const allBox = document.getElementById('sp-all');
   const autoSel = document.getElementById('sp-auto');
+  const frame = document.getElementById('sp-frame');
+  const zoomVal = document.getElementById('sp-zoom-val');
+  const TAKIP_URL = 'https://avukat.uyap.gov.tr/durusma-takip';
+  const ZOOM_KEY = 'edurusma_side_zoom';
   let timer = null;
   let lastTabId = null;
 
@@ -68,7 +71,6 @@
 
   function render(rows) {
     todayBox.innerHTML = '';
-    allBox.innerHTML = '';
     const t = todayStr();
     const todays = rows.filter(r => (r.tarih || '').indexOf(t) !== -1);
     const head = document.createElement('div');
@@ -93,19 +95,11 @@
       });
       todayBox.appendChild(list);
     }
-    if (rows.length) {
-      const list = document.createElement('div');
-      list.className = 'sp-list';
-      rows.forEach((r) => {
-        list.appendChild(itemEl(r, `${r.tarih} · ${r.dosya}`, '', `${shortMahkeme(r.mahkeme)} · ${shortDurum(r.aciklama)}`));
-      });
-      allBox.appendChild(list);
-    }
+    // Tam liste alttaki canlı çerçevede; burada yalnız bugün özeti durur.
   }
 
   function hint(msg) {
     todayBox.innerHTML = '';
-    allBox.innerHTML = '';
     const e = document.createElement('div');
     e.className = 'sp-empty';
     e.textContent = msg;
@@ -162,6 +156,25 @@
     } catch (_) {}
     load(false);
   });
+  document.getElementById('sp-framerefresh').addEventListener('click', () => {
+    try { frame.src = TAKIP_URL; setStatus('Takip sayfası yenileniyor...'); } catch (_) {}
+  });
+
+  function applyZoom(z) {
+    try {
+      frame.style.zoom = String(z);
+      zoomVal.textContent = Math.round(z * 100) + '%';
+      chrome.storage.local.set({ [ZOOM_KEY]: z });
+    } catch (_) {}
+  }
+  document.getElementById('sp-zoom-in').addEventListener('click', async () => {
+    const cur = parseFloat(frame.style.zoom) || 1;
+    applyZoom(Math.min(1.25, Math.round((cur + 0.1) * 100) / 100));
+  });
+  document.getElementById('sp-zoom-out').addEventListener('click', async () => {
+    const cur = parseFloat(frame.style.zoom) || 1;
+    applyZoom(Math.max(0.6, Math.round((cur - 0.1) * 100) / 100));
+  });
   autoSel.addEventListener('change', () => { restartAuto(); setStatus('Otomatik: ' + (autoSel.value === '0' ? 'kapalı' : (autoSel.value / 1000) + ' sn')); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) load(true); });
   (async function init() {
@@ -169,6 +182,12 @@
       const r = await chrome.storage.local.get(AUTO_KEY);
       if (r && typeof r[AUTO_KEY] === 'number') autoSel.value = String(r[AUTO_KEY]);
     } catch (_) {}
+    try {
+      const z = await chrome.storage.local.get(ZOOM_KEY);
+      const zv = z && typeof z[ZOOM_KEY] === 'number' ? z[ZOOM_KEY] : 0.85;
+      frame.style.zoom = String(zv);
+      zoomVal.textContent = Math.round(zv * 100) + '%';
+    } catch (_) { frame.style.zoom = '0.85'; zoomVal.textContent = '85%'; }
     restartAuto();
     load(false);
   })();

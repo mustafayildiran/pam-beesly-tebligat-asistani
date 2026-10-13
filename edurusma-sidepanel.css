@@ -15,5 +15,11 @@ body { margin: 0; padding: 10px; font: 13px/1.45 system-ui, -apple-system, "Sego
 .sp-item .sp-sub { display: block; font-size: 11px; color: #64748b; margin-top: 1px; }
 .sp-item.ed-next { border-color: #16a34a; background: #f0fdf4; font-weight: 700; }
 .sp-item.ed-past { opacity: .55; }
-.sp-sep { font-weight: 700; color: #475569; margin: 12px 2px 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.sp-livehead { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-weight: 700; color: #475569; margin: 12px 2px 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.sp-livehead button { border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; font-size: 11px; padding: 2px 8px; cursor: pointer; color: #334155; text-transform: none; letter-spacing: normal; font-weight: 400; }
+.sp-zoom { display: inline-flex; align-items: center; gap: 4px; }
+#sp-zoom-val { font-size: 11px; color: #334155; min-width: 36px; text-align: center; }
+#sp-frame { flex: 1 1 auto; min-height: 320px; width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; }
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; }
 .sp-foot { font-size: 10px; color: #94a3b8; text-align: center; margin: 12px 0 4px; }
